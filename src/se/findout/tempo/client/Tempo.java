@@ -30,10 +30,17 @@ public class Tempo implements EntryPoint {
 		});
 		splitPanel.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
+				
+		VersionsModel versionsModel = new VersionsModel();
+		Version v = versionsModel.addVersion(versionsModel.getInitialVersion(), new Change());
+		v = versionsModel.addVersion(v, new Change());
+		v = versionsModel.addVersion(v, new Change());
 		
-		ModelEditorView modelEditorView = new ModelEditorView();
-		splitPanel.addSouth(new VersionsView(new VersionsModel()), 200);
-		splitPanel.add(modelEditorView);
+		
+		splitPanel.addSouth(new VersionsView(versionsModel), 200);
+		
+		splitPanel.add(new ModelEditorView());
+		
 		RootPanel.get().add(splitPanel);
 	}
 }

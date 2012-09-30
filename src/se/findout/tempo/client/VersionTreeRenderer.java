@@ -22,7 +22,7 @@ public class VersionTreeRenderer {
 				Branch branch = branches.get(i);
 				List<Version> successors = model.getVersionSuccessors(branch.version);
 				for (int j = 0; j < successors.size(); j++) {
-					Version succVersion = successors.get(i);
+					Version succVersion = successors.get(j);
 					int yi = Math.max(branch.yi, lastYi + 1);
 					nextBranches.add(new Branch(branch, succVersion, yi));
 					lastYi = yi;
@@ -41,6 +41,9 @@ public class VersionTreeRenderer {
 
 	private void drawBranches(List<Branch> branches, int xi) {
 		for (Branch branch : branches) {
+			if (branch.prevBranch != null) {
+				shapeFactory.addRelation((xi - 1) * getxScale(), branch.prevBranch.yi * getyScale(), xi * getxScale(), branch.yi * getyScale());
+			}
 			shapeFactory.addVersion(branch.version, xi * getxScale(), branch.yi * getyScale());
 		}
 
@@ -76,6 +79,8 @@ public class VersionTreeRenderer {
 
 	public interface ShapeFactory {
 		void addVersion(Version version, int x, int y);
+
+		void addRelation(int x0, int y0, int x1, int y1);
 	}
 
 }

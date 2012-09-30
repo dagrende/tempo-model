@@ -28,16 +28,17 @@ public class VersionsModelTest {
 
 	@Test
 	public void testAddVersion_makeBranch() {
-		Version initialVersion = model.getHeads().get(0);
-		Version secondVersion = model.addVersion(initialVersion, new Change());
-		Version thirdVersion = model.addVersion(initialVersion, new Change());
+		Version v1 = model.getHeads().get(0);
+		Version v2 = model.addVersion(v1, new Change());
+		Version v11 = model.addVersion(v1, new Change());
+		Version v12 = model.addVersion(v11, new Change());
 		Assert.assertEquals(2, model.getHeads().size());
-		Assert.assertEquals(initialVersion, secondVersion.getBase());
-		Assert.assertEquals(initialVersion, thirdVersion.getBase());
+		Assert.assertEquals(v1, v2.getBase());
+		Assert.assertEquals(v1, v11.getBase());
 		
-		Assert.assertEquals("1", initialVersion.getName());
-		Assert.assertEquals("2", secondVersion.getName());
-		Assert.assertEquals("1.1", thirdVersion.getName());
+		Assert.assertEquals("1", v1.getName());
+		Assert.assertEquals("2", v2.getName());
+		Assert.assertEquals("1.1", v11.getName());
 	}
 	
 	@Test

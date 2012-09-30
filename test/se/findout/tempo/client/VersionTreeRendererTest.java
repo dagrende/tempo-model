@@ -21,6 +21,10 @@ public class VersionTreeRendererTest {
 			public void addVersion(Version version, int x, int y) {
 				nodes.add(new VersionNode(version, x, y));
 			}
+
+			@Override
+			public void addRelation(int x0, int y0, int x1, int y1) {
+			}
 		});
 		versionTreeRenderer.setxScale(1);
 		versionTreeRenderer.setyScale(1);

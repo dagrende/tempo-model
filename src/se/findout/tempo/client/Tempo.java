@@ -31,13 +31,18 @@ public class Tempo implements EntryPoint {
 		splitPanel.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
 				
-		VersionsModel versionsModel = new VersionsModel();
-		Version v = versionsModel.addVersion(versionsModel.getInitialVersion(), new Change());
-		v = versionsModel.addVersion(v, new Change());
-		v = versionsModel.addVersion(v, new Change());
+		VersionsModel model = new VersionsModel();
+		Version v1 = model.getInitialVersion();
+		Version v2 = model.addVersion(v1, new Change());
+		Version v3 = model.addVersion(v2, new Change());
+		Version v4 = model.addVersion(v3, new Change());
+		Version v31 = model.addVersion(v3, new Change());
+		Version v32 = model.addVersion(v31, new Change());
+		Version v33 = model.addVersion(v32, new Change());
+		Version v5 = model.addVersion(v4, new Change());
+
 		
-		
-		splitPanel.addSouth(new VersionsView(versionsModel), 200);
+		splitPanel.addSouth(new VersionsView(model), 200);
 		
 		splitPanel.add(new ModelEditorView());
 		

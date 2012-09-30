@@ -23,7 +23,7 @@ public class VersionsModel {
 		String name = i == -1 ? base.getName() + ".1" : incVersion(base.getName());
 		Version newVersion = new Version(name, base, change);
 		if (i == -1) {
-			heads.add(base);	// let new version become a new head (new branch)
+			heads.add(newVersion);	// let new version become a new head (new branch)
 		} else {
 			heads.set(i, newVersion);	// let the new version replace a head
 		}

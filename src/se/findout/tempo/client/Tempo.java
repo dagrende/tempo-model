@@ -1,5 +1,7 @@
 package se.findout.tempo.client;
 
+import se.findout.tempo.client.ModelEditorView.ModelChangeListener;
+
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
@@ -11,7 +13,10 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Tempo implements EntryPoint {
+public class Tempo implements EntryPoint, ModelChangeListener {
+
+	private VersionsModel model;
+	private VersionsView versionsView;
 
 	/**
 	 * This is the entry point method.
@@ -31,7 +36,7 @@ public class Tempo implements EntryPoint {
 		splitPanel.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
 				
-		VersionsModel model = new VersionsModel();
+		model = new VersionsModel();
 		Version v1 = model.getInitialVersion();
 		Version v2 = model.addVersion(v1, new Change());
 		Version v3 = model.addVersion(v2, new Change());
@@ -42,10 +47,19 @@ public class Tempo implements EntryPoint {
 		Version v5 = model.addVersion(v4, new Change());
 
 		
-		splitPanel.addSouth(new VersionsView(model), 200);
+		versionsView = new VersionsView(model);
+		splitPanel.addSouth(versionsView, 200);
 		
-		splitPanel.add(new ModelEditorView());
+		ModelEditorView modelEditor = new ModelEditorView();
+		modelEditor.addModelChangelListener(this);
+		splitPanel.add(modelEditor);
 		
 		RootPanel.get().add(splitPanel);
+	}
+
+	@Override
+	public void itemAdded() {
+		Version addedVersion = model.addVersion(model.getHeads().get(0), new Change());
+		versionsView.selectVersion(addedVersion);
 	}
 }

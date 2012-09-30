@@ -16,6 +16,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 
 public class ModelEditorView extends FlowPanel implements ToolSelectionListener {
+	private List<ModelChangeListener> modelChangeListeners = new ArrayList<ModelEditorView.ModelChangeListener>();
 	private DrawingArea drawingArea;
 	private List<ModelItem> modelItems = new ArrayList<ModelItem>();
 	private int nextId = 1;
@@ -37,7 +38,6 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		drawingArea.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				System.out.println("drawingArea click at (" + event.getX() + ", " + event.getY() + ")");
 				if ("selection".equals(toolPalette.getSelectedTool())) {
 				} else if ("rectangle".equals(toolPalette.getSelectedTool())) {
 					createRectangle(createId(), event.getX(), event.getY(), 50, 50);
@@ -60,6 +60,9 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		rectangle.addClickHandler(modelItemClickHandler);
 		modelItems.add(new ModelItem(id, rectangle));
 		drawingArea.add(rectangle);
+		for (ModelChangeListener listener : modelChangeListeners) {
+			listener.itemAdded();
+		}
 	}
 	
 	public void deleteModelObject(String id) {
@@ -81,7 +84,6 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 
 	@Override
 	public void onSelect(ToolSelectionEvent toolSelectionEvent) {
-		System.out.println("ModelEditorView.onSelect("+toolSelectionEvent.getId() + ")");
 	}
 
 	private final class ModelItemClickHandler implements ClickHandler {
@@ -122,6 +124,14 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 			}
 		}
 		return null;
+	}
+	
+	static interface ModelChangeListener {
+		void itemAdded();
+	}
+	
+	public void addModelChangelListener(ModelChangeListener listener) {
+		modelChangeListeners.add(listener);
 	}
 
 }

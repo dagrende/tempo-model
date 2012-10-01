@@ -37,17 +37,9 @@ public class Tempo implements EntryPoint, ModelChangeListener {
 				.setProperty("border", "3px solid #e7e7e7");
 				
 		model = new VersionsModel();
-		Version v1 = model.getInitialVersion();
-		Version v2 = model.addVersion(v1, new Change());
-		Version v3 = model.addVersion(v2, new Change());
-		Version v4 = model.addVersion(v3, new Change());
-		Version v31 = model.addVersion(v3, new Change());
-		Version v32 = model.addVersion(v31, new Change());
-		Version v33 = model.addVersion(v32, new Change());
-		Version v5 = model.addVersion(v4, new Change());
-
 		
 		versionsView = new VersionsView(model);
+		versionsView.selectVersion(model.getInitialVersion());
 		splitPanel.addSouth(versionsView, 200);
 		
 		ModelEditorView modelEditor = new ModelEditorView();
@@ -58,8 +50,9 @@ public class Tempo implements EntryPoint, ModelChangeListener {
 	}
 
 	@Override
-	public void itemAdded() {
-		Version addedVersion = model.addVersion(model.getHeads().get(0), new Change());
+	public void change(Change change) {
+		System.out.println("versionsView.getSelectedVersion()=" + versionsView.getSelectedVersion());
+		Version addedVersion = model.addVersion(versionsView.getSelectedVersion(), change);
 		versionsView.selectVersion(addedVersion);
 	}
 }

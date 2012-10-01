@@ -56,12 +56,48 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 
 	public void createRectangle(String id, int x, int y, int width, int height) {
-		Rectangle rectangle = new Rectangle(x, y, width, height);
-		rectangle.addClickHandler(modelItemClickHandler);
-		modelItems.add(new ModelItem(id, rectangle));
-		drawingArea.add(rectangle);
+		CreateRectangleChange change = new CreateRectangleChange(id, x, y, width, height);
+		change.execute();
+		fireChange(change);
+	}
+
+	public class CreateRectangleChange implements Change {
+		private String id;
+		private int x;
+		private int y;
+		private int width;
+		private int height;
+		private Rectangle rectangle;
+		private ModelItem modelItem;
+
+		public CreateRectangleChange(String id, int x, int y, int width, int height) {
+			this.id = id;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+		}
+
+		@Override
+		public void execute() {
+			rectangle = new Rectangle(x, y, width, height);
+			rectangle.addClickHandler(modelItemClickHandler);
+			modelItem = new ModelItem(id, rectangle);
+			modelItems.add(modelItem);
+			drawingArea.add(rectangle);
+		}
+
+		@Override
+		public void undo() {
+			drawingArea.remove(rectangle);
+			modelItems.remove(modelItem);
+		}
+
+	}
+
+	private void fireChange(Change change) {
 		for (ModelChangeListener listener : modelChangeListeners) {
-			listener.itemAdded();
+			listener.change(change);
 		}
 	}
 	
@@ -127,7 +163,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 	
 	static interface ModelChangeListener {
-		void itemAdded();
+		void change(Change change);
 	}
 	
 	public void addModelChangelListener(ModelChangeListener listener) {

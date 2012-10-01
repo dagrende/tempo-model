@@ -35,9 +35,9 @@ public class VersionTreeRendererTest {
 	@Test
 	public void testRender_no_branch() {
 		Version v0 = model.getInitialVersion();
-		Version v1 = model.addVersion(v0, new Change());
-		Version v2 = model.addVersion(v1, new Change());
-		Version v3 = model.addVersion(v2, new Change());
+		Version v1 = model.addVersion(v0, new NUllChange());
+		Version v2 = model.addVersion(v1, new NUllChange());
+		Version v3 = model.addVersion(v2, new NUllChange());
 
 		versionTreeRenderer.render();
 		
@@ -69,10 +69,10 @@ public class VersionTreeRendererTest {
 	@Test
 	public void testRender_branch() {
 		Version v1 = model.getInitialVersion();
-		Version v2 = model.addVersion(v1, new Change());
-		Version v3 = model.addVersion(v2, new Change());
-		Version v4 = model.addVersion(v3, new Change());
-		Version v31 = model.addVersion(v3, new Change());
+		Version v2 = model.addVersion(v1, new NUllChange());
+		Version v3 = model.addVersion(v2, new NUllChange());
+		Version v4 = model.addVersion(v3, new NUllChange());
+		Version v31 = model.addVersion(v3, new NUllChange());
 
 		versionTreeRenderer.render();
 		

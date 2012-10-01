@@ -110,11 +110,11 @@ public class VersionsView extends FlowPanel implements VersionChangeListener {
 					selectionCircle.setStrokeWidth(3);
 					selectedVersionCircle = selectionCircle;
 					drawingArea.add(selectionCircle);
-					Version prevSelectedVersion = selectedVersion;
-					selectedVersion = version;
-					for (SelectionChangeListener listener : selectionChangeListeners) {
-						listener.selectionChanged(new SelectionChangedEvent(this, prevSelectedVersion, version));
-					}
+				}
+				Version prevSelectedVersion = selectedVersion;
+				selectedVersion = version;
+				for (SelectionChangeListener listener : selectionChangeListeners) {
+					listener.selectionChanged(new SelectionChangedEvent(this, prevSelectedVersion, version));
 				}
 			}
 		}
@@ -152,6 +152,10 @@ public class VersionsView extends FlowPanel implements VersionChangeListener {
 
 	public interface SelectionChangeListener {
 		void selectionChanged(SelectionChangedEvent event);
+	}
+
+	public Version getSelectedVersion() {
+		return selectedVersion;
 	}
 
 }

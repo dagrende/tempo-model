@@ -5,7 +5,7 @@ import java.util.List;
 
 
 public class VersionTreeRenderer {
-	private VersionsModel model;
+	private VersionModel model;
 	private ShapeFactory shapeFactory;
 	private int xScale = 30;
 	private int yScale = 30;
@@ -33,7 +33,7 @@ public class VersionTreeRenderer {
 		}
 	}
 	
-	public VersionTreeRenderer(VersionsModel model, ShapeFactory shapeFactory) {
+	public VersionTreeRenderer(VersionModel model, ShapeFactory shapeFactory) {
 		super();
 		this.model = model;
 		this.shapeFactory = shapeFactory;

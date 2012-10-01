@@ -1,14 +1,18 @@
 package se.findout.tempo.client;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
-public class VersionsModel {
+public class VersionModel {
 	private final List<Version> heads = new ArrayList<Version>();
 	private final List<Version> allVersions = new ArrayList<Version>();
-	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionsModel.VersionChangeListener>();
+	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionModel.VersionChangeListener>();
 	
-	public VersionsModel() {
+	public VersionModel() {
 		Version initialVersion = new Version("1", null, null);
 		getHeads().add(initialVersion);
 		allVersions.add(initialVersion);
@@ -59,18 +63,18 @@ public class VersionsModel {
 	}
 
 	public static class VersionChangeEvent {
-		private final VersionsModel model;
+		private final VersionModel model;
 		private final Version newVersion;
 		private final boolean isNewBranch;
 
-		public VersionChangeEvent(VersionsModel model, Version newVersion,
+		public VersionChangeEvent(VersionModel model, Version newVersion,
 				boolean isNewBranch) {
 			this.model = model;
 			this.newVersion = newVersion;
 			this.isNewBranch = isNewBranch;
 		}
 
-		public VersionsModel getModel() {
+		public VersionModel getModel() {
 			return model;
 		}
 
@@ -110,5 +114,48 @@ public class VersionsModel {
 			}
 		}
 		return result;
+	}
+	
+	/**
+	 * undo and execute from from to to.
+	 * @param from
+	 * @param to
+	 */
+	public void switchVersion(Version from, Version to) {
+		Set<Version> undoVersions = new HashSet<Version>();
+		Version v = from;
+		while (v != null) {
+			undoVersions.add(v);
+			v = v.getBase();
+		}
+		
+		List<Version> executeVersions = new ArrayList<Version>();
+		v = to;
+		while (v != null) {
+			executeVersions.add(v);
+			if (undoVersions.contains(v)) {
+				break;
+			}
+			v = v.getBase();
+		}
+		
+		Collections.reverse(executeVersions);
+		
+		v = from;
+		while (v != null && v != executeVersions.get(0)) {
+			v.getChange().undo();
+			v = v.getBase();
+		}
+		
+		for (int i = 1; i < executeVersions.size(); i++) {
+			executeVersions.get(i).getChange().execute();
+		}
+	}
+	
+	public void addVersionsToCollection(Collection<Version> collection, Version v) {
+		while (v != null) {
+			collection.add(v);
+			v = v.getBase();
+		}
 	}
 }

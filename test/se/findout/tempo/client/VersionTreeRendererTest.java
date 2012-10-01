@@ -9,13 +9,13 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class VersionTreeRendererTest {
-	private VersionsModel model;
+	private VersionModel model;
 	private VersionTreeRenderer versionTreeRenderer;
 	private List<VersionNode> nodes;
 
 	@Before
 	public void setup() {
-		model = new VersionsModel();
+		model = new VersionModel();
 		versionTreeRenderer = new VersionTreeRenderer(model, new VersionTreeRenderer.ShapeFactory() {
 			@Override
 			public void addVersion(Version version, int x, int y) {

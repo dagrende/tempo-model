@@ -10,17 +10,16 @@ import org.vaadin.gwtgraphics.client.Line;
 import org.vaadin.gwtgraphics.client.shape.Circle;
 import org.vaadin.gwtgraphics.client.shape.Text;
 
-import se.findout.tempo.client.ModelEditorView.ModelChangeListener;
-import se.findout.tempo.client.VersionsModel.VersionChangeEvent;
-import se.findout.tempo.client.VersionsModel.VersionChangeListener;
+import se.findout.tempo.client.VersionModel.VersionChangeEvent;
+import se.findout.tempo.client.VersionModel.VersionChangeListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 
-public class VersionsView extends FlowPanel implements VersionChangeListener {
-	private VersionsModel model;
+public class VersionView extends FlowPanel implements VersionChangeListener {
+	private VersionModel model;
 	private DrawingArea drawingArea;
 	private VersionTreeRenderer versionTreeRenderer;
 	private Map<Version, Circle> versionToCircle = new HashMap<Version, Circle>();
@@ -28,8 +27,8 @@ public class VersionsView extends FlowPanel implements VersionChangeListener {
 	private Circle selectedVersionCircle;
 	private List<SelectionChangeListener> selectionChangeListeners = new ArrayList<SelectionChangeListener>();
 
-	public VersionsView(VersionsModel versionsModel) {
-		this.model = versionsModel;
+	public VersionView(VersionModel versionModel) {
+		this.model = versionModel;
 		drawingArea = new DrawingArea(2000, 1000);
 		drawingArea.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
@@ -125,19 +124,19 @@ public class VersionsView extends FlowPanel implements VersionChangeListener {
 	}
 
 	public class SelectionChangedEvent {
-		private final VersionsView versionsView;
+		private final VersionView versionView;
 		private final Version prevSelectedVersion;
 		private final Version newSelectedVersion;
 
-		public SelectionChangedEvent(VersionsView versionsView,
+		public SelectionChangedEvent(VersionView versionView,
 				Version prevSelectedVersion, Version newSelectedVersion) {
-					this.versionsView = versionsView;
+					this.versionView = versionView;
 					this.prevSelectedVersion = prevSelectedVersion;
 					this.newSelectedVersion = newSelectedVersion;
 		}
 
-		public VersionsView getVersionsView() {
-			return versionsView;
+		public VersionView getVersionsView() {
+			return versionView;
 		}
 
 		public Version getPrevSelectedVersion() {

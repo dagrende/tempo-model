@@ -15,8 +15,8 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
  */
 public class Tempo implements EntryPoint, ModelChangeListener {
 
-	private VersionsModel model;
-	private VersionsView versionsView;
+	private VersionModel model;
+	private VersionView versionView;
 
 	/**
 	 * This is the entry point method.
@@ -36,11 +36,11 @@ public class Tempo implements EntryPoint, ModelChangeListener {
 		splitPanel.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
 				
-		model = new VersionsModel();
+		model = new VersionModel();
 		
-		versionsView = new VersionsView(model);
-		versionsView.selectVersion(model.getInitialVersion());
-		splitPanel.addSouth(versionsView, 200);
+		versionView = new VersionView(model);
+		versionView.selectVersion(model.getInitialVersion());
+		splitPanel.addSouth(versionView, 200);
 		
 		ModelEditorView modelEditor = new ModelEditorView();
 		modelEditor.addModelChangelListener(this);
@@ -51,8 +51,8 @@ public class Tempo implements EntryPoint, ModelChangeListener {
 
 	@Override
 	public void change(Change change) {
-		System.out.println("versionsView.getSelectedVersion()=" + versionsView.getSelectedVersion());
-		Version addedVersion = model.addVersion(versionsView.getSelectedVersion(), change);
-		versionsView.selectVersion(addedVersion);
+		System.out.println("versionView.getSelectedVersion()=" + versionView.getSelectedVersion());
+		Version addedVersion = model.addVersion(versionView.getSelectedVersion(), change);
+		versionView.selectVersion(addedVersion);
 	}
 }

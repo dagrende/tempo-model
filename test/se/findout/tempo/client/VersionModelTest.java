@@ -5,12 +5,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class VersionsModelTest {
-	private VersionsModel model;
+public class VersionModelTest {
+	private VersionModel model;
 
 	@Before
 	public void setup() {
-		model = new VersionsModel();
+		model = new VersionModel();
 	}
 	
 	@Test
@@ -53,6 +53,11 @@ public class VersionsModelTest {
 	public void testIncVersion() {
 		Assert.assertEquals("2", model.incVersion("1"));
 		Assert.assertEquals("1.2", model.incVersion("1.1"));
+		
+	}
+	
+	@Test
+	public void testSwitchVersion() {
 		
 	}
 }

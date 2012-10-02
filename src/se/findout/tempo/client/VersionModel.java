@@ -118,8 +118,8 @@ public class VersionModel {
 	
 	/**
 	 * undo and execute from from to to.
-	 * @param from
-	 * @param to
+	 * @param from the current version
+	 * @param to the version we want
 	 */
 	public void switchVersion(Version from, Version to) {
 		Set<Version> undoVersions = new HashSet<Version>();

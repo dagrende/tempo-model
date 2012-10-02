@@ -57,55 +57,16 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 
 	public void createRectangle(String id, int x, int y, int width, int height) {
 		CreateRectangleChange change = new CreateRectangleChange(id, x, y, width, height);
-		change.execute();
 		fireChange(change);
 	}
 
-	public class CreateRectangleChange implements Change {
-		private String id;
-		private int x;
-		private int y;
-		private int width;
-		private int height;
-		private Rectangle rectangle;
-		private ModelItem modelItem;
-
-		public CreateRectangleChange(String id, int x, int y, int width, int height) {
-			this.id = id;
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-		}
-
-		@Override
-		public void execute() {
-			rectangle = new Rectangle(x, y, width, height);
-			rectangle.addClickHandler(modelItemClickHandler);
-			modelItem = new ModelItem(id, rectangle);
-			modelItems.add(modelItem);
-			drawingArea.add(rectangle);
-		}
-
-		@Override
-		public void undo() {
-			drawingArea.remove(rectangle);
-			modelItems.remove(modelItem);
-		}
-
+	public void deleteModelObject(String id) {
+		fireChange(new DeleteCommand(id));
 	}
 
 	private void fireChange(Change change) {
 		for (ModelChangeListener listener : modelChangeListeners) {
 			listener.change(change);
-		}
-	}
-	
-	public void deleteModelObject(String id) {
-		ModelItem item = getItemById(id);
-		if (item != null) {
-			drawingArea.remove(item.getVo());
-			modelItems.remove(item);
 		}
 	}
 
@@ -168,6 +129,70 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	
 	public void addModelChangelListener(ModelChangeListener listener) {
 		modelChangeListeners.add(listener);
+	}
+
+	public class CreateRectangleChange implements Change {
+		private String id;
+		private int x;
+		private int y;
+		private int width;
+		private int height;
+		private Rectangle rectangle;
+		private ModelItem modelItem;
+
+		public CreateRectangleChange(String id, int x, int y, int width, int height) {
+			this.id = id;
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+		}
+
+		@Override
+		public void execute() {
+			rectangle = new Rectangle(x, y, width, height);
+			rectangle.addClickHandler(modelItemClickHandler);
+			modelItem = new ModelItem(id, rectangle);
+			modelItems.add(modelItem);
+			drawingArea.add(rectangle);
+		}
+
+		@Override
+		public void undo() {
+			drawingArea.remove(rectangle);
+			modelItems.remove(modelItem);
+		}
+
+	}
+
+	public class DeleteCommand implements Change {
+		/**
+		 * id of model object to delete.
+		 */
+		private String id;
+		private ModelItem deletedItem;
+
+		public DeleteCommand(String id) {
+			this.id = id;
+		}
+
+		@Override
+		public void execute() {
+			deletedItem = getItemById(id);
+			if (deletedItem != null) {
+				drawingArea.remove(deletedItem.getVo());
+				modelItems.remove(deletedItem);
+			}
+		}
+
+		@Override
+		public void undo() {
+			if (deletedItem != null) {
+				drawingArea.add(deletedItem.getVo());
+				modelItems.add(deletedItem);
+			}
+		}
+
 	}
 
 }

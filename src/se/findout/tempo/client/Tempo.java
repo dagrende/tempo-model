@@ -1,6 +1,8 @@
 package se.findout.tempo.client;
 
 import se.findout.tempo.client.ModelEditorView.ModelChangeListener;
+import se.findout.tempo.client.VersionView.SelectionChangeListener;
+import se.findout.tempo.client.VersionView.SelectionChangedEvent;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.event.logical.shared.ResizeEvent;
@@ -13,7 +15,7 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Tempo implements EntryPoint, ModelChangeListener {
+public class Tempo implements EntryPoint, ModelChangeListener, SelectionChangeListener {
 
 	private VersionModel model;
 	private VersionView versionView;
@@ -40,6 +42,7 @@ public class Tempo implements EntryPoint, ModelChangeListener {
 		
 		versionView = new VersionView(model);
 		versionView.selectVersion(model.getInitialVersion());
+		versionView.addSelectionChangeListener(this);
 		splitPanel.addSouth(versionView, 200);
 		
 		ModelEditorView modelEditor = new ModelEditorView();
@@ -51,8 +54,12 @@ public class Tempo implements EntryPoint, ModelChangeListener {
 
 	@Override
 	public void change(Change change) {
-		System.out.println("versionView.getSelectedVersion()=" + versionView.getSelectedVersion());
 		Version addedVersion = model.addVersion(versionView.getSelectedVersion(), change);
 		versionView.selectVersion(addedVersion);
+	}
+
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		model.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion());
 	}
 }

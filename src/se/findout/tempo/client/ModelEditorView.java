@@ -27,9 +27,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
 		
 		toolPalette = new ToolPalette();
-		toolPalette.addTool("selection", "Selection");
 		toolPalette.addTool("rectangle", "Rectangle");
-		toolPalette.addTool("relation", "Relation");
 		toolPalette.addTool("delete", "Delete");
 		toolPalette.addSelectionListener(this);
 		horizontalPanel.add(toolPalette);
@@ -38,8 +36,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		drawingArea.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				if ("selection".equals(toolPalette.getSelectedTool())) {
-				} else if ("rectangle".equals(toolPalette.getSelectedTool())) {
+				if ("rectangle".equals(toolPalette.getSelectedTool())) {
 					createRectangle(createId(), event.getX(), event.getY(), 50, 50);
 				}
 			}
@@ -47,7 +44,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		horizontalPanel.add(drawingArea);
 		
 		add(horizontalPanel);
-		toolPalette.selectTool("selection");
+		toolPalette.selectTool("rectangle");
 	}
 	
 	private String createId() {
@@ -56,7 +53,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 
 	public void createRectangle(String id, int x, int y, int width, int height) {
-		CreateRectangleChange change = new CreateRectangleChange(id, x, y, width, height);
+		CreateRectangleCommand change = new CreateRectangleCommand(id, x, y, width, height);
 		fireChange(change);
 	}
 
@@ -131,7 +128,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		modelChangeListeners.add(listener);
 	}
 
-	public class CreateRectangleChange implements Change {
+	public class CreateRectangleCommand implements Change {
 		private String id;
 		private int x;
 		private int y;
@@ -140,7 +137,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		private Rectangle rectangle;
 		private ModelItem modelItem;
 
-		public CreateRectangleChange(String id, int x, int y, int width, int height) {
+		public CreateRectangleCommand(String id, int x, int y, int width, int height) {
 			this.id = id;
 			this.x = x;
 			this.y = y;
@@ -161,6 +158,11 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		public void undo() {
 			drawingArea.remove(rectangle);
 			modelItems.remove(modelItem);
+		}
+
+		@Override
+		public String getDescription() {
+			return "Create rectangle";
 		}
 
 	}
@@ -191,6 +193,11 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 				drawingArea.add(deletedItem.getVo());
 				modelItems.add(deletedItem);
 			}
+		}
+
+		@Override
+		public String getDescription() {
+			return "Delete object";
 		}
 
 	}

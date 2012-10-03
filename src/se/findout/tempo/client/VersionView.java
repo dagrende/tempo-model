@@ -19,7 +19,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 
 public class VersionView extends FlowPanel implements VersionChangeListener {
-	private VersionModel model;
+	private VersionModel versionModel;
 	private DrawingArea drawingArea;
 	private VersionTreeRenderer versionTreeRenderer;
 	private Map<Version, Circle> versionToCircle = new HashMap<Version, Circle>();
@@ -28,14 +28,14 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 	private List<SelectionChangeListener> selectionChangeListeners = new ArrayList<SelectionChangeListener>();
 
 	public VersionView(VersionModel versionModel) {
-		this.model = versionModel;
+		this.versionModel = versionModel;
 		drawingArea = new DrawingArea(2000, 1000);
 		drawingArea.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
 		add(new ScrollPanel(drawingArea));
 		
 		
-		versionTreeRenderer = new VersionTreeRenderer(model, new VersionTreeRenderer.ShapeFactory() {
+		versionTreeRenderer = new VersionTreeRenderer(versionModel, new VersionTreeRenderer.ShapeFactory() {
 			
 			@Override
 			public void addVersion(Version version, int x, int y) {
@@ -44,6 +44,7 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 				Circle circle = new Circle(40 + x, 40 + y, 20);
 				circle.setStrokeWidth(2);
 				circle.addClickHandler(handler);
+				circle.setTitle(version.getChange() != null ? version.getChange().getDescription() : "Initial version");
 				drawingArea.add(circle);
 				versionToCircle.put(version, circle);
 				
@@ -68,7 +69,7 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 		
 		versionTreeRenderer.render();
 		
-		model.addVersionChangeListener(this);
+		versionModel.addVersionChangeListener(this);
 		
 	}
 

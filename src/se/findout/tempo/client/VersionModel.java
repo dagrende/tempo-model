@@ -121,7 +121,7 @@ public class VersionModel {
 	 * @param from the current version
 	 * @param to the version we want
 	 */
-	public void switchVersion(Version from, Version to) {
+	public void switchVersion(Version from, Version to, ChangeIterator changeIterator) {
 		Set<Version> undoVersions = new HashSet<Version>();
 		Version v = from;
 		while (v != null) {
@@ -143,19 +143,17 @@ public class VersionModel {
 		
 		v = from;
 		while (v != null && v != executeVersions.get(0)) {
-			v.getChange().undo();
+			changeIterator.undo(v.getChange());
 			v = v.getBase();
 		}
 		
 		for (int i = 1; i < executeVersions.size(); i++) {
-			executeVersions.get(i).getChange().execute();
+			changeIterator.execute(executeVersions.get(i).getChange());
 		}
 	}
 	
-	public void addVersionsToCollection(Collection<Version> collection, Version v) {
-		while (v != null) {
-			collection.add(v);
-			v = v.getBase();
-		}
+	public interface ChangeIterator {
+		void execute(Change change);
+		void undo(Change change);
 	}
 }

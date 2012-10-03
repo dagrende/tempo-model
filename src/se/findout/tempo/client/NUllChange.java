@@ -15,4 +15,9 @@ public class NUllChange implements Change {
 	public void undo() {
 	}
 
+	@Override
+	public String getDescription() {
+		return "No change";
+	}
+
 }

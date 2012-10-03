@@ -64,7 +64,7 @@ public class VersionModelTest {
 		Version v3 = model.addVersion(v2, new LogChange(log, "v3"));
 		Version v4 = model.addVersion(v3, new LogChange(log, "v4"));
 
-		model.switchVersion(v1,  v4);
+		model.switchVersion(v1,  v4, changeIterator);
 		Assert.assertEquals("ev2 ev3 ev4 ", log.toString());
 	}
 	
@@ -76,7 +76,7 @@ public class VersionModelTest {
 		Version v3 = model.addVersion(v2, new LogChange(log, "v3"));
 		Version v4 = model.addVersion(v3, new LogChange(log, "v4"));
 
-		model.switchVersion(v4,  v1);
+		model.switchVersion(v4,  v1, changeIterator);
 		Assert.assertEquals("uv4 uv3 uv2 ", log.toString());
 	}
 	
@@ -86,7 +86,7 @@ public class VersionModelTest {
 		Version v1 = model.getHeads().get(0);
 		Version v2 = model.addVersion(v1, new LogChange(log, "v2"));
 
-		model.switchVersion(v2,  v2);
+		model.switchVersion(v2,  v2, changeIterator);
 		Assert.assertEquals("", log.toString());
 	}
 	
@@ -99,10 +99,23 @@ public class VersionModelTest {
 		Version v21 = model.addVersion(v2, new LogChange(log, "v21"));
 		Version v22 = model.addVersion(v21, new LogChange(log, "v22"));
 
-		model.switchVersion(v3,  v22);
+		model.switchVersion(v3,  v22, changeIterator);
 		Assert.assertEquals("uv3 ev21 ev22 ", log.toString());
 	}
 	
+	VersionModel.ChangeIterator changeIterator = new VersionModel.ChangeIterator() {
+		
+		@Override
+		public void undo(Change change) {
+			change.undo();
+		}
+		
+		@Override
+		public void execute(Change change) {
+			change.execute();
+		}
+	};
+
 	public class LogChange implements Change {
 
 		private StringBuilder log;
@@ -121,6 +134,11 @@ public class VersionModelTest {
 		@Override
 		public void undo() {
 			log.append("u" + name + " ");
+		}
+
+		@Override
+		public String getDescription() {
+			return "Log change";
 		}
 
 	}

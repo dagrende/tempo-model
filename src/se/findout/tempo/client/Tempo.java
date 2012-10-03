@@ -60,6 +60,17 @@ public class Tempo implements EntryPoint, ModelChangeListener, SelectionChangeLi
 
 	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
-		model.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion());
+		model.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion(), new VersionModel.ChangeIterator() {
+			
+			@Override
+			public void undo(Change change) {
+				change.undo();
+			}
+			
+			@Override
+			public void execute(Change change) {
+				change.execute();
+			}
+		});
 	}
 }

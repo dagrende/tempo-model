@@ -122,6 +122,7 @@ public class VersionModel {
 	 * @param to the version we want
 	 */
 	public void switchVersion(Version from, Version to, ChangeIterator changeIterator) {
+		System.out.println("VersionModel.switchVersion(" + from + ", " + to + ")");
 		Set<Version> undoVersions = new HashSet<Version>();
 		Version v = from;
 		while (v != null) {

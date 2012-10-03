@@ -7,6 +7,8 @@ import org.vaadin.gwtgraphics.client.DrawingArea;
 import org.vaadin.gwtgraphics.client.VectorObject;
 import org.vaadin.gwtgraphics.client.shape.Rectangle;
 
+import se.findout.tempo.client.ModelModel.Box;
+import se.findout.tempo.client.ModelModel.ModelChangeListener;
 import se.findout.tempo.client.ToolPalette.ToolSelectionEvent;
 import se.findout.tempo.client.ToolPalette.ToolSelectionListener;
 
@@ -16,14 +18,16 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 
 public class ModelEditorView extends FlowPanel implements ToolSelectionListener {
-	private List<ModelChangeListener> modelChangeListeners = new ArrayList<ModelEditorView.ModelChangeListener>();
+	private List<EditorCommandListener> editorCommandListeners = new ArrayList<ModelEditorView.EditorCommandListener>();
 	private DrawingArea drawingArea;
 	private List<ModelItem> modelItems = new ArrayList<ModelItem>();
+	private ModelModel modelModel;
 	private int nextId = 1;
 	private ClickHandler modelItemClickHandler = new ModelItemClickHandler();
 	private ToolPalette toolPalette;
 
-	public ModelEditorView() {
+	public ModelEditorView(ModelModel modelModel) {
+		this.modelModel = modelModel;
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
 		
 		toolPalette = new ToolPalette();
@@ -45,6 +49,29 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		
 		add(horizontalPanel);
 		toolPalette.selectTool("rectangle");
+		
+		modelModel.addChangeListener(new ModelModel.ModelChangeListener() {
+			@Override
+			public void addBox(Box box) {
+				Rectangle rectangle = new Rectangle(box.getX(), box.getY(), box.getWidth(), box.getHeight());
+				rectangle.addClickHandler(modelItemClickHandler);
+				ModelItem modelItem = new ModelItem(box.getId(), rectangle);
+				modelItems.add(modelItem);
+				drawingArea.add(rectangle);
+			}
+			
+			@Override
+			public void deleteBox(String id) {
+				ModelItem deletedItem = getItemById(id);
+				if (deletedItem != null) {
+					System.out
+							.println("ModelEditorView.ModelEditorView(...).new ModelChangeListener() {...}.deleteBox(" + id + ")");
+					drawingArea.remove(deletedItem.getVo());
+					modelItems.remove(deletedItem);
+				}
+			}
+			
+		});
 	}
 	
 	private String createId() {
@@ -62,7 +89,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 
 	private void fireChange(Change change) {
-		for (ModelChangeListener listener : modelChangeListeners) {
+		for (EditorCommandListener listener : editorCommandListeners) {
 			listener.change(change);
 		}
 	}
@@ -120,12 +147,12 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		return null;
 	}
 	
-	static interface ModelChangeListener {
+	static interface EditorCommandListener {
 		void change(Change change);
 	}
 	
-	public void addModelChangelListener(ModelChangeListener listener) {
-		modelChangeListeners.add(listener);
+	public void addModelChangelListener(EditorCommandListener listener) {
+		editorCommandListeners.add(listener);
 	}
 
 	public class CreateRectangleCommand implements Change {
@@ -135,7 +162,6 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		private int width;
 		private int height;
 		private Rectangle rectangle;
-		private ModelItem modelItem;
 
 		public CreateRectangleCommand(String id, int x, int y, int width, int height) {
 			this.id = id;
@@ -147,17 +173,13 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 
 		@Override
 		public void execute() {
-			rectangle = new Rectangle(x, y, width, height);
-			rectangle.addClickHandler(modelItemClickHandler);
-			modelItem = new ModelItem(id, rectangle);
-			modelItems.add(modelItem);
-			drawingArea.add(rectangle);
+			modelModel.addBox(id, x, y, width, height);
 		}
 
 		@Override
 		public void undo() {
-			drawingArea.remove(rectangle);
-			modelItems.remove(modelItem);
+			System.out.println("ModelEditorView.CreateRectangleCommand.undo()");
+			modelModel.deleteBox(id);
 		}
 
 		@Override
@@ -172,7 +194,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		 * id of model object to delete.
 		 */
 		private String id;
-		private ModelItem deletedItem;
+		private Box deletedBox;
 
 		public DeleteCommand(String id) {
 			this.id = id;
@@ -180,18 +202,16 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 
 		@Override
 		public void execute() {
-			deletedItem = getItemById(id);
-			if (deletedItem != null) {
-				drawingArea.remove(deletedItem.getVo());
-				modelItems.remove(deletedItem);
-			}
+			ModelItem item = getItemById(id);
+			Rectangle rectangle = (Rectangle) item.getVo();
+			deletedBox = new Box(id, rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
+			modelModel.deleteBox(id);
 		}
 
 		@Override
 		public void undo() {
-			if (deletedItem != null) {
-				drawingArea.add(deletedItem.getVo());
-				modelItems.add(deletedItem);
+			if (deletedBox != null) {
+				modelModel.addBox(deletedBox.getId(), deletedBox.getX(), deletedBox.getY(), deletedBox.getWidth(), deletedBox.getHeight());
 			}
 		}
 

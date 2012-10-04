@@ -88,7 +88,7 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		fireChange(new DeleteCommand(id));
 	}
 
-	private void fireChange(Change change) {
+	private void fireChange(Command change) {
 		for (EditorCommandListener listener : editorCommandListeners) {
 			listener.change(change);
 		}
@@ -148,78 +148,11 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 	
 	static interface EditorCommandListener {
-		void change(Change change);
+		void change(Command change);
 	}
 	
 	public void addModelChangelListener(EditorCommandListener listener) {
 		editorCommandListeners.add(listener);
-	}
-
-	public class CreateRectangleCommand implements Change {
-		private String id;
-		private int x;
-		private int y;
-		private int width;
-		private int height;
-		private Rectangle rectangle;
-
-		public CreateRectangleCommand(String id, int x, int y, int width, int height) {
-			this.id = id;
-			this.x = x;
-			this.y = y;
-			this.width = width;
-			this.height = height;
-		}
-
-		@Override
-		public void execute() {
-			modelModel.addBox(id, x, y, width, height);
-		}
-
-		@Override
-		public void undo() {
-			System.out.println("ModelEditorView.CreateRectangleCommand.undo()");
-			modelModel.deleteBox(id);
-		}
-
-		@Override
-		public String getDescription() {
-			return "Create rectangle";
-		}
-
-	}
-
-	public class DeleteCommand implements Change {
-		/**
-		 * id of model object to delete.
-		 */
-		private String id;
-		private Box deletedBox;
-
-		public DeleteCommand(String id) {
-			this.id = id;
-		}
-
-		@Override
-		public void execute() {
-			ModelItem item = getItemById(id);
-			Rectangle rectangle = (Rectangle) item.getVo();
-			deletedBox = new Box(id, rectangle.getX(), rectangle.getY(), rectangle.getWidth(), rectangle.getHeight());
-			modelModel.deleteBox(id);
-		}
-
-		@Override
-		public void undo() {
-			if (deletedBox != null) {
-				modelModel.addBox(deletedBox.getId(), deletedBox.getX(), deletedBox.getY(), deletedBox.getWidth(), deletedBox.getHeight());
-			}
-		}
-
-		@Override
-		public String getDescription() {
-			return "Delete object";
-		}
-
 	}
 
 }

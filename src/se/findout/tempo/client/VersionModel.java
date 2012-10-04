@@ -22,7 +22,7 @@ public class VersionModel {
 		return heads;
 	}
 	
-	public Version addVersion(Version base, Change change) {
+	public Version addVersion(Version base, Command change) {
 		int i = heads.indexOf(base);
 		String name = i == -1 ? base.getName() + ".1" : incVersion(base.getName());
 		Version newVersion = new Version(name, base, change);
@@ -154,7 +154,7 @@ public class VersionModel {
 	}
 	
 	public interface ChangeIterator {
-		void execute(Change change);
-		void undo(Change change);
+		void execute(Command change);
+		void undo(Command change);
 	}
 }

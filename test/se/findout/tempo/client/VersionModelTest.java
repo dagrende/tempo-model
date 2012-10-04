@@ -1,7 +1,6 @@
 package se.findout.tempo.client;
 
 import org.junit.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
 
@@ -106,17 +105,17 @@ public class VersionModelTest {
 	VersionModel.ChangeIterator changeIterator = new VersionModel.ChangeIterator() {
 		
 		@Override
-		public void undo(Change change) {
-			change.undo();
+		public void undo(Command change) {
+			change.undo(null);
 		}
 		
 		@Override
-		public void execute(Change change) {
-			change.execute();
+		public void execute(Command change) {
+			change.execute(null);
 		}
 	};
 
-	public class LogChange implements Change {
+	public class LogChange implements Command {
 
 		private StringBuilder log;
 		private String name;
@@ -127,12 +126,12 @@ public class VersionModelTest {
 		}
 
 		@Override
-		public void execute() {
+		public void execute(ModelModel modelModel) {
 			log.append("e" + name + " ");
 		}
 
 		@Override
-		public void undo() {
+		public void undo(ModelModel modelModel) {
 			log.append("u" + name + " ");
 		}
 

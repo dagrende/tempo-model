@@ -14,9 +14,9 @@ public class Version {
 	/**
 	 * The change of the base version to obtain this version.
 	 */
-	private final Change change;
+	private final Command change;
 
-	public Version(String name, Version base, Change change) {
+	public Version(String name, Version base, Command change) {
 		super();
 		this.name = name;
 		this.base = base;
@@ -31,7 +31,7 @@ public class Version {
 		return base;
 	}
 
-	public Change getChange() {
+	public Command getChange() {
 		return change;
 	}
 	

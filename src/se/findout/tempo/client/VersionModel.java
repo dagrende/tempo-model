@@ -1,7 +1,6 @@
 package se.findout.tempo.client;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +22,7 @@ public class VersionModel {
 	}
 	
 	public Version addVersion(Version base, Command change) {
+		System.out.println("VersionModel.addVersion('" + base.getName() + "', " + change + ")");
 		int i = heads.indexOf(base);
 		String name = i == -1 ? base.getName() + ".1" : incVersion(base.getName());
 		Version newVersion = new Version(name, base, change);
@@ -156,5 +156,14 @@ public class VersionModel {
 	public interface ChangeIterator {
 		void execute(Command change);
 		void undo(Command change);
+	}
+
+	public Version getVersionById(String id) {
+		for (Version version : allVersions) {
+			if (version.getName().equals(id)) {
+				return version;
+			}
+		}
+		return null;
 	}
 }

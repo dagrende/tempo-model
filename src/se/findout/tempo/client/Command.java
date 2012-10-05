@@ -22,4 +22,5 @@ public interface Command extends Serializable {
 	 * @return the description
 	 */
 	String getDescription();
+	
 }

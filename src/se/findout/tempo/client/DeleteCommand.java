@@ -41,4 +41,9 @@ public class DeleteCommand implements Command, Serializable {
 		return "Delete object";
 	}
 
+	@Override
+	public String toString() {
+		return "DeleteCommand('" + id + ")";
+	}
+
 }

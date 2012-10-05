@@ -90,6 +90,19 @@ public class VersionModelTest {
 	}
 	
 	@Test
+	public void testGetVersionById() {
+		StringBuilder log = new StringBuilder();
+		Version v1 = model.getHeads().get(0);
+		Version v2 = model.addVersion(v1, new LogChange(log, "v2"));
+		Version v3 = model.addVersion(v2, new LogChange(log, "v3"));
+		Version v21 = model.addVersion(v2, new LogChange(log, "v21"));
+		Version v22 = model.addVersion(v21, new LogChange(log, "v22"));
+
+		Assert.assertEquals(v1, model.getVersionById("1"));
+		Assert.assertEquals(v22, model.getVersionById("2.2"));
+	}
+	
+	@Test
 	public void testSwitchVersion_branch() {
 		StringBuilder log = new StringBuilder();
 		Version v1 = model.getHeads().get(0);

@@ -1,5 +1,7 @@
 package se.findout.tempo.client;
 
+import java.util.List;
+
 import se.findout.tempo.client.ModelEditorView.EditorCommandListener;
 import se.findout.tempo.client.VersionView.SelectionChangeListener;
 import se.findout.tempo.client.VersionView.SelectionChangedEvent;
@@ -54,6 +56,8 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		splitPanel.add(modelEditor);
 		
 		RootPanel.get().add(splitPanel);
+		
+		retrieveAllChanges();
 	}
 
 	@Override
@@ -62,6 +66,34 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		Version addedVersion = model.addVersion(selectedVersion, change);
 		storeChange(selectedVersion, change);
 		versionView.selectVersion(addedVersion);
+	}
+	
+	private void retrieveAllChanges() {
+		if (modelRepoService == null) {
+			modelRepoService = GWT.create(ModelRepositoryService.class);
+		}
+		
+		AsyncCallback<List<ChangeInfo>> callback = new AsyncCallback<List<ChangeInfo>>() {
+		
+		@Override
+		public void onSuccess(List<ChangeInfo> result) {
+			System.out
+					.println("Tempo.retrieveAllChanges().new AsyncCallback() {...}.onSuccess(" + result + ")");
+			for (ChangeInfo changeInfo : result) {
+				model.addVersion(model.getVersionById(changeInfo.versionId), changeInfo.change);
+			}
+			versionView.selectVersion(model.getHeads().get(0));
+		}
+		
+		@Override
+		public void onFailure(Throwable caught) {
+			System.out
+					.println("Tempo.storeChange(...).new AsyncCallback() {...}.onFailure()");
+			GWT.log("failed", caught);
+		}
+	};
+	
+	modelRepoService.getAllChanges(callback);
 	}
 
 	private void storeChange(Version baseVersion, Command change) {

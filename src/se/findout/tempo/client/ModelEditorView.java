@@ -8,7 +8,6 @@ import org.vaadin.gwtgraphics.client.VectorObject;
 import org.vaadin.gwtgraphics.client.shape.Rectangle;
 
 import se.findout.tempo.client.ModelModel.Box;
-import se.findout.tempo.client.ModelModel.ModelChangeListener;
 import se.findout.tempo.client.ToolPalette.ToolSelectionEvent;
 import se.findout.tempo.client.ToolPalette.ToolSelectionListener;
 

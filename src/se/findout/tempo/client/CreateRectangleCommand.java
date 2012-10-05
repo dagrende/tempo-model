@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import se.findout.tempo.client.ModelModel.Box;
 
+
 public class CreateRectangleCommand implements Command, Serializable {
 	private static final long serialVersionUID = 1L;
 	private String id;
@@ -39,4 +40,8 @@ public class CreateRectangleCommand implements Command, Serializable {
 		return "Create rectangle";
 	}
 
+	@Override
+	public String toString() {
+		return "CreateRectangleCommand('" + id + "', " + x + ", " + y + ", " + width + ", " + height + ")";
+	}
 }

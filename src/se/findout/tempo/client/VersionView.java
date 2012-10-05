@@ -94,6 +94,7 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 	}
 	
 	public void selectVersion(Version version) {
+		System.out.println("VersionView.selectVersion(" + version + ")");
 		if (version != selectedVersion) {
 			if (version == null) {
 				if (selectedVersionCircle != null) {

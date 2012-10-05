@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import se.findout.tempo.client.ModelModel.Box;
-
 public class ModelModel {
 	private Map<String, Box> boxes = new HashMap<String, ModelModel.Box>();
 	private List<ModelChangeListener> changeListeners = new ArrayList<ModelModel.ModelChangeListener>();
@@ -46,9 +44,15 @@ public class ModelModel {
 		public int getHeight() {
 			return height;
 		}
-	}
+
+		@Override
+		public String toString() {
+			return "Box('" + id + "', " + x + ", " + y + ", " + width + ", " + height + ")";
+		}
+}
 
 	public void addBox(Box box) {
+		System.out.println("ModelModel.addBox(" + box + ")");
 		boxes.put(box.getId(), box);
 		fireBoxAdded(box);
 	}

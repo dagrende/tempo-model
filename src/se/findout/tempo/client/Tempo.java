@@ -12,8 +12,11 @@ import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
@@ -26,10 +29,46 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 	private ModelModel modelModel;
 	private ModelRepositoryServiceAsync modelRepoService = null;
 
+	private LoginInfo loginInfo = null;
+	private VerticalPanel loginPanel = new VerticalPanel();
+	private Label loginLabel = new Label(
+			"Please sign in to your Google Account to access the Tempo Model application.");
+	private Anchor signInLink = new Anchor("Sign In");
+	private Anchor signOutLink = new Anchor("Sign Out");
+
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
+		// Check login status using login service.
+		LoginServiceAsync loginService = GWT.create(LoginService.class);
+		loginService.login(GWT.getHostPageBaseURL(),
+				new AsyncCallback<LoginInfo>() {
+					public void onFailure(Throwable error) {
+					}
+
+					public void onSuccess(LoginInfo result) {
+						loginInfo = result;
+						signOutLink.setHref(loginInfo.getLogoutUrl());
+						if (loginInfo.isLoggedIn()) {
+							setupUI();
+						} else {
+							loadLogin();
+						}
+					}
+				});
+//		setupUI();
+	}
+
+	private void loadLogin() {
+		// Assemble login panel.
+		signInLink.setHref(loginInfo.getLoginUrl());
+		loginPanel.add(loginLabel);
+		loginPanel.add(signInLink);
+		RootPanel.get().add(loginPanel);
+	}
+
+	public void setupUI() {
 		RootPanel.get().getElement().getStyle().setProperty("margin", "0px");
 		final SplitLayoutPanel splitPanel = new SplitLayoutPanel(8);
 		splitPanel.setWidth("99%");
@@ -55,8 +94,8 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 		ModelEditorView modelEditor = new ModelEditorView(modelModel);
 		modelEditor.addModelChangelListener(this);
 		splitPanel.add(modelEditor);
-
 		RootPanel.get().add(splitPanel);
+		RootPanel.get().add(signOutLink);
 
 		retrieveAllChanges();
 	}

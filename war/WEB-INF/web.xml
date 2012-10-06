@@ -6,6 +6,11 @@
   </welcome-file-list>
 
   <!-- Servlets -->
+ <servlet>
+    <servlet-name>loginService</servlet-name>
+    <servlet-class>se.findout.tempo.server.LoginServiceImpl</servlet-class>
+  </servlet>
+
   <servlet>
     <servlet-name>ModelRepositoryServiceImpl</servlet-name>
     <servlet-class>se.findout.tempo.server.ModelRepositoryServiceImpl</servlet-class>
@@ -20,6 +25,11 @@
     </init-param>
   </servlet>
 
+  <servlet-mapping>
+    <servlet-name>loginService</servlet-name>
+    <url-pattern>/tempo/login</url-pattern>
+  </servlet-mapping>
+  
   <servlet-mapping>
     <servlet-name>ModelRepositoryServiceImpl</servlet-name>
     <url-pattern>/tempo/modelRepository</url-pattern>

@@ -1,5 +1,6 @@
 package se.findout.tempo.client;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +10,16 @@ public class ModelModel {
 	private Map<String, Box> boxes = new HashMap<String, ModelModel.Box>();
 	private List<ModelChangeListener> changeListeners = new ArrayList<ModelModel.ModelChangeListener>();
 	
-	public static class Box {
+	public static class Box implements Serializable {
+		private static final long serialVersionUID = 1L;
 		private String id;
 		private int x;
 		private int y;
 		private int width;
 		private int height;
+		
+		public Box() {
+		}
 		
 		public Box(String id, int x, int y, int width, int height) {
 			super();

@@ -18,13 +18,14 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
 /**
  * Entry point classes define <code>onModuleLoad()</code>.
  */
-public class Tempo implements EntryPoint, EditorCommandListener, SelectionChangeListener {
+public class Tempo implements EntryPoint, EditorCommandListener,
+		SelectionChangeListener {
 
 	private VersionModel model;
 	private VersionView versionView;
 	private ModelModel modelModel;
 	private ModelRepositoryServiceAsync modelRepoService = null;
-	
+
 	/**
 	 * This is the entry point method.
 	 */
@@ -42,21 +43,21 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		});
 		splitPanel.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
-				
+
 		model = new VersionModel();
-		
+
 		versionView = new VersionView(model);
 		versionView.selectVersion(model.getInitialVersion());
 		versionView.addSelectionChangeListener(this);
 		splitPanel.addSouth(versionView, 200);
-		
+
 		modelModel = new ModelModel();
 		ModelEditorView modelEditor = new ModelEditorView(modelModel);
 		modelEditor.addModelChangelListener(this);
 		splitPanel.add(modelEditor);
-		
+
 		RootPanel.get().add(splitPanel);
-		
+
 		retrieveAllChanges();
 	}
 
@@ -67,48 +68,27 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		storeChange(selectedVersion, change);
 		versionView.selectVersion(addedVersion);
 	}
-	
+
 	private void retrieveAllChanges() {
 		if (modelRepoService == null) {
 			modelRepoService = GWT.create(ModelRepositoryService.class);
 		}
-		
-		AsyncCallback<List<ChangeInfo>> callback = new AsyncCallback<List<ChangeInfo>>() {
-		
-		@Override
-		public void onSuccess(List<ChangeInfo> result) {
-			System.out
-					.println("Tempo.retrieveAllChanges().new AsyncCallback() {...}.onSuccess(" + result + ")");
-			for (ChangeInfo changeInfo : result) {
-				model.addVersion(model.getVersionById(changeInfo.versionId), changeInfo.change);
-			}
-			versionView.selectVersion(model.getHeads().get(0));
-		}
-		
-		@Override
-		public void onFailure(Throwable caught) {
-			System.out
-					.println("Tempo.storeChange(...).new AsyncCallback() {...}.onFailure()");
-			GWT.log("failed", caught);
-		}
-	};
-	
-	modelRepoService.getAllChanges(callback);
-	}
 
-	private void storeChange(Version baseVersion, Command change) {
-		if (modelRepoService == null) {
-			modelRepoService = GWT.create(ModelRepositoryService.class);
-		}
-		
-		AsyncCallback<String> callback = new AsyncCallback<String>() {
-			
+		AsyncCallback<List<ChangeInfo>> callback = new AsyncCallback<List<ChangeInfo>>() {
+
 			@Override
-			public void onSuccess(String result) {
+			public void onSuccess(List<ChangeInfo> result) {
 				System.out
-						.println("Tempo.storeChange(...).new AsyncCallback() {...}.onSuccess()");
+						.println("Tempo.retrieveAllChanges().new AsyncCallback() {...}.onSuccess("
+								+ result + ")");
+				for (ChangeInfo changeInfo : result) {
+					model.addVersion(
+							model.getVersionById(changeInfo.versionId),
+							changeInfo.change);
+				}
+				versionView.selectVersion(model.getHeads().get(0));
 			}
-			
+
 			@Override
 			public void onFailure(Throwable caught) {
 				System.out
@@ -116,27 +96,51 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 				GWT.log("failed", caught);
 			}
 		};
-		
+
+		modelRepoService.getAllChanges(callback);
+	}
+
+	private void storeChange(Version baseVersion, Command change) {
+		if (modelRepoService == null) {
+			modelRepoService = GWT.create(ModelRepositoryService.class);
+		}
+
+		AsyncCallback<String> callback = new AsyncCallback<String>() {
+
+			@Override
+			public void onSuccess(String result) {
+				System.out.println("Tempo.storeChange.callback.onSuccess()");
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				System.out.println("Tempo.storeChange.callback.onFailure()");
+				GWT.log("failed", caught);
+			}
+		};
+
 		modelRepoService.addCommand(baseVersion.getName(), change, callback);
 	}
 
 	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
-		model.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion(), new VersionModel.ChangeIterator() {
-			
-			@Override
-			public void undo(Command change) {
-				System.out
-						.println("undo(" + change.getDescription() + ")");
-				change.undo(modelModel);
-			}
-			
-			@Override
-			public void execute(Command change) {
-				System.out
-						.println("execute(" + change.getDescription() + ")");
-				change.execute(modelModel);
-			}
-		});
+		model.switchVersion(event.getPrevSelectedVersion(),
+				event.getNewSelectedVersion(),
+				new VersionModel.ChangeIterator() {
+
+					@Override
+					public void undo(Command change) {
+						System.out.println("undo(" + change.getDescription()
+								+ ")");
+						change.undo(modelModel);
+					}
+
+					@Override
+					public void execute(Command change) {
+						System.out.println("execute(" + change.getDescription()
+								+ ")");
+						change.execute(modelModel);
+					}
+				});
 	}
 }

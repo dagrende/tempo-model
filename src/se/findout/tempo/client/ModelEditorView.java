@@ -28,12 +28,12 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
 		
 		toolPalette = new ToolPalette();
-		toolPalette.addTool("rectangle", "Rectangle");
-		toolPalette.addTool("delete", "Delete");
+		toolPalette.addTool("rectangle", "Rectangle", "Select this tool and click in drawing area to create a rectangle");
+		toolPalette.addTool("delete", "Delete", "Select this tool and click on object to delete it");
 		toolPalette.addSelectionListener(this);
 		horizontalPanel.add(toolPalette);
 		
-		drawingArea = new DrawingArea(400, 400);
+		drawingArea = new DrawingArea(1600, 900);
 		drawingArea.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {

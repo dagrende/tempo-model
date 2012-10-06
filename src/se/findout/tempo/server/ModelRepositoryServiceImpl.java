@@ -1,6 +1,7 @@
 package se.findout.tempo.server;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import se.findout.tempo.client.ChangeInfo;
@@ -10,6 +11,9 @@ import se.findout.tempo.client.ModelRepositoryService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.users.User;
+import com.google.appengine.api.users.UserService;
+import com.google.appengine.api.users.UserServiceFactory;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gwt.user.server.rpc.RemoteServiceServlet;
@@ -21,11 +25,15 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements 
 	@Override
 	public String addCommand(String versionId, Command command) {
 		System.out.println("ModelRepositoryServiceImpl.addCommand(" + versionId + ", " + command.getDescription() + ")");
-		
+	    UserService userService = UserServiceFactory.getUserService();
+	    User user = userService.getCurrentUser();
+
 		Entity changeEntity = new Entity("Change");
 		changeEntity.setProperty("version", versionId);
 		changeEntity.setProperty("changeType", command.getClass().getName());
 		changeEntity.setProperty("changeData", gson.toJson(command));
+		changeEntity.setProperty("time", new Date());
+		changeEntity.setProperty("user", user.getNickname());
 		DatastoreServiceFactory.getDatastoreService().put(changeEntity);
 		
 		return "successor of " + versionId;
@@ -33,7 +41,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements 
 
 	@Override
 	public List<ChangeInfo> getAllChanges() {
-		Query query = new Query("Change");
+		Query query = new Query("Change").addSort("time", Query.SortDirection.ASCENDING);
 	    Iterable<Entity> channelEntities = DatastoreServiceFactory.getDatastoreService().prepare(query).asIterable();
 	    List<ChangeInfo> changeInfos = new ArrayList<ChangeInfo>();
 	    for (Entity entity : channelEntities) {

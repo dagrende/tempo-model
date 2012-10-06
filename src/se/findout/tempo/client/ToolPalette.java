@@ -16,8 +16,9 @@ public class ToolPalette extends VerticalPanel {
 	public ToolPalette() {
 	}
 
-	public void addTool(String id, String label) {
+	public void addTool(String id, String label, String toolTip) {
 		Button b = new Button(label);
+		b.setTitle(toolTip);
 		tools.add(new ToolItem(id, label, b));
 		b.addClickHandler(new ClickHandler() {
 

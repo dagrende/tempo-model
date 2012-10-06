@@ -20,13 +20,11 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	private List<EditorCommandListener> editorCommandListeners = new ArrayList<ModelEditorView.EditorCommandListener>();
 	private DrawingArea drawingArea;
 	private List<ModelItem> modelItems = new ArrayList<ModelItem>();
-	private ModelModel modelModel;
 	private int nextId = 1;
 	private ClickHandler modelItemClickHandler = new ModelItemClickHandler();
 	private ToolPalette toolPalette;
 
 	public ModelEditorView(ModelModel modelModel) {
-		this.modelModel = modelModel;
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
 		
 		toolPalette = new ToolPalette();

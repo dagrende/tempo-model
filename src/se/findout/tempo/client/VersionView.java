@@ -19,7 +19,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 
 public class VersionView extends FlowPanel implements VersionChangeListener {
-	private VersionModel versionModel;
 	private DrawingArea drawingArea;
 	private VersionTreeRenderer versionTreeRenderer;
 	private Map<Version, Circle> versionToCircle = new HashMap<Version, Circle>();
@@ -28,7 +27,6 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 	private List<SelectionChangeListener> selectionChangeListeners = new ArrayList<SelectionChangeListener>();
 
 	public VersionView(VersionModel versionModel) {
-		this.versionModel = versionModel;
 		drawingArea = new DrawingArea(2000, 1000);
 		drawingArea.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");

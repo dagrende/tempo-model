@@ -30,6 +30,7 @@ public class VersionModelTest {
 		Version v1 = model.getHeads().get(0);
 		Version v2 = model.addVersion(v1, new NUllChange());
 		Version v11 = model.addVersion(v1, new NUllChange());
+		@SuppressWarnings("unused")
 		Version v12 = model.addVersion(v11, new NUllChange());
 		Assert.assertEquals(2, model.getHeads().size());
 		Assert.assertEquals(v1, v2.getBase());
@@ -94,6 +95,7 @@ public class VersionModelTest {
 		StringBuilder log = new StringBuilder();
 		Version v1 = model.getHeads().get(0);
 		Version v2 = model.addVersion(v1, new LogChange(log, "v2"));
+		@SuppressWarnings("unused")
 		Version v3 = model.addVersion(v2, new LogChange(log, "v3"));
 		Version v21 = model.addVersion(v2, new LogChange(log, "v21"));
 		Version v22 = model.addVersion(v21, new LogChange(log, "v22"));
@@ -129,7 +131,7 @@ public class VersionModelTest {
 	};
 
 	public class LogChange implements Command {
-
+		private static final long serialVersionUID = 1L;
 		private StringBuilder log;
 		private String name;
 

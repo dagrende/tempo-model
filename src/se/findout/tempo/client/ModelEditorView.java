@@ -74,8 +74,13 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 	
 	private String createId() {
-		int id = nextId++;
-		return Integer.toString(id);
+		while (true) {
+			nextId++;
+			String idString = Integer.toString(nextId);
+			if (getItemById(idString) == null) {
+				return idString;
+			}
+		}
 	}
 
 	public void createRectangle(String id, int x, int y, int width, int height) {

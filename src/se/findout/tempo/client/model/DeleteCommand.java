@@ -1,8 +1,8 @@
-package se.findout.tempo.client;
+package se.findout.tempo.client.model;
 
 import java.io.Serializable;
 
-import se.findout.tempo.client.ModelModel.Box;
+import se.findout.tempo.client.model.ModelModel.Box;
 
 public class DeleteCommand implements Command, Serializable {
 	private static final long serialVersionUID = 1L;

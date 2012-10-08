@@ -1,4 +1,4 @@
-package se.findout.tempo.client;
+package se.findout.tempo.client.model;
 
 import java.util.ArrayList;
 import java.util.Collections;

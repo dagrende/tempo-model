@@ -5,6 +5,14 @@ import java.util.List;
 import se.findout.tempo.client.ModelEditorView.EditorCommandListener;
 import se.findout.tempo.client.VersionView.SelectionChangeListener;
 import se.findout.tempo.client.VersionView.SelectionChangedEvent;
+import se.findout.tempo.client.login.LoginInfo;
+import se.findout.tempo.client.login.LoginService;
+import se.findout.tempo.client.login.LoginServiceAsync;
+import se.findout.tempo.client.model.ChangeInfo;
+import se.findout.tempo.client.model.Command;
+import se.findout.tempo.client.model.ModelModel;
+import se.findout.tempo.client.model.Version;
+import se.findout.tempo.client.model.VersionModel;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
@@ -122,8 +130,8 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 								+ result + ")");
 				for (ChangeInfo changeInfo : result) {
 					model.addVersion(
-							model.getVersionById(changeInfo.versionId),
-							changeInfo.change);
+							model.getVersionById(changeInfo.getVersionId()),
+							changeInfo.getChange());
 				}
 				versionView.selectVersion(model.getHeads().get(0));
 			}

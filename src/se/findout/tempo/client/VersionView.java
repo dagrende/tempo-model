@@ -10,8 +10,10 @@ import org.vaadin.gwtgraphics.client.Line;
 import org.vaadin.gwtgraphics.client.shape.Circle;
 import org.vaadin.gwtgraphics.client.shape.Text;
 
-import se.findout.tempo.client.VersionModel.VersionChangeEvent;
-import se.findout.tempo.client.VersionModel.VersionChangeListener;
+import se.findout.tempo.client.model.Version;
+import se.findout.tempo.client.model.VersionModel;
+import se.findout.tempo.client.model.VersionModel.VersionChangeEvent;
+import se.findout.tempo.client.model.VersionModel.VersionChangeListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;

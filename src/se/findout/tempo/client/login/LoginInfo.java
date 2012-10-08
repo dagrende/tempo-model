@@ -1,4 +1,4 @@
-package se.findout.tempo.client;
+package se.findout.tempo.client.login;
 
 import java.io.Serializable;
 

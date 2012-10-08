@@ -4,6 +4,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import se.findout.tempo.client.model.Command;
+import se.findout.tempo.client.model.ModelModel;
+import se.findout.tempo.client.model.NUllChange;
+import se.findout.tempo.client.model.Version;
+import se.findout.tempo.client.model.VersionModel;
+
 public class VersionModelTest {
 	private VersionModel model;
 

@@ -1,7 +1,7 @@
 package se.findout.tempo.server;
 
-import se.findout.tempo.client.LoginInfo;
-import se.findout.tempo.client.LoginService;
+import se.findout.tempo.client.login.LoginInfo;
+import se.findout.tempo.client.login.LoginService;
 
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;

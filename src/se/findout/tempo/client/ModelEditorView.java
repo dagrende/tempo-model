@@ -7,9 +7,13 @@ import org.vaadin.gwtgraphics.client.DrawingArea;
 import org.vaadin.gwtgraphics.client.VectorObject;
 import org.vaadin.gwtgraphics.client.shape.Rectangle;
 
-import se.findout.tempo.client.ModelModel.Box;
 import se.findout.tempo.client.ToolPalette.ToolSelectionEvent;
 import se.findout.tempo.client.ToolPalette.ToolSelectionListener;
+import se.findout.tempo.client.model.Command;
+import se.findout.tempo.client.model.CreateRectangleCommand;
+import se.findout.tempo.client.model.DeleteCommand;
+import se.findout.tempo.client.model.ModelModel;
+import se.findout.tempo.client.model.ModelModel.Box;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;

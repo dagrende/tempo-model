@@ -3,6 +3,9 @@ package se.findout.tempo.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import se.findout.tempo.client.model.Version;
+import se.findout.tempo.client.model.VersionModel;
+
 
 public class VersionTreeRenderer {
 	private VersionModel model;

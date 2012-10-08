@@ -8,6 +8,10 @@ import junit.framework.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import se.findout.tempo.client.model.NUllChange;
+import se.findout.tempo.client.model.Version;
+import se.findout.tempo.client.model.VersionModel;
+
 public class VersionTreeRendererTest {
 	private VersionModel model;
 	private VersionTreeRenderer versionTreeRenderer;

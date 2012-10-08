@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import se.findout.tempo.client.ChangeInfo;
-import se.findout.tempo.client.Command;
 import se.findout.tempo.client.ModelRepositoryService;
+import se.findout.tempo.client.model.ChangeInfo;
+import se.findout.tempo.client.model.Command;
 
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;

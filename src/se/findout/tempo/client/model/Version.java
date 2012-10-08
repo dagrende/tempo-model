@@ -1,4 +1,4 @@
-package se.findout.tempo.client;
+package se.findout.tempo.client.model;
 
 /*
  * Describes a version of data that is obtained by applying a change to a base version.

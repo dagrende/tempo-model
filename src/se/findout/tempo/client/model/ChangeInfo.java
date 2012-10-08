@@ -1,11 +1,11 @@
-package se.findout.tempo.client;
+package se.findout.tempo.client.model;
 
 import java.io.Serializable;
 
 public class ChangeInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
-	String versionId;
-	Command change;
+	private String versionId;
+	private Command change;
 	
 	public ChangeInfo() {
 	}
@@ -20,4 +20,20 @@ public class ChangeInfo implements Serializable {
 	public String toString() {
 		return "ChangeInfo(" + versionId + ", " + change + ")";
 	}
+	public String getVersionId() {
+		return versionId;
+	}
+
+	public void setVersionId(String versionId) {
+		this.versionId = versionId;
+	}
+
+	public Command getChange() {
+		return change;
+	}
+
+	public void setChange(Command change) {
+		this.change = change;
+	}
+
 }

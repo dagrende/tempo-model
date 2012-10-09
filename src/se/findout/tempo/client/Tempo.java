@@ -1,6 +1,8 @@
 package se.findout.tempo.client;
 
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import se.findout.tempo.client.ModelEditorView.EditorCommandListener;
 import se.findout.tempo.client.VersionView.SelectionChangeListener;
@@ -31,7 +33,7 @@ import com.google.gwt.user.client.ui.VerticalPanel;
  */
 public class Tempo implements EntryPoint, EditorCommandListener,
 		SelectionChangeListener {
-
+    private final static Logger logger = Logger.getLogger(Tempo.class.getName());
 	private VersionModel model;
 	private VersionView versionView;
 	private ModelModel modelModel;
@@ -43,11 +45,17 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 			"Please sign in to your Google Account to access the Tempo Model application.");
 	private Anchor signInLink = new Anchor("Sign In");
 	private Anchor signOutLink = new Anchor("Sign Out");
+	private String docPath;
 
 	/**
 	 * This is the entry point method.
 	 */
 	public void onModuleLoad() {
+		docPath = Window.Location.getParameter("doc");
+		if (docPath == null) {
+			docPath = "unnamed";
+		}
+		
 		// Check login status using login service.
 		LoginServiceAsync loginService = GWT.create(LoginService.class);
 		loginService.login(GWT.getHostPageBaseURL(),
@@ -105,18 +113,18 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 		RootPanel.get().add(splitPanel);
 		RootPanel.get().add(signOutLink);
 
-		retrieveAllChanges();
+		retrieveAllChanges(docPath);
 	}
 
 	@Override
 	public void change(Command change) {
 		Version selectedVersion = versionView.getSelectedVersion();
 		Version addedVersion = model.addVersion(selectedVersion, change);
-		storeChange(selectedVersion, change);
+		storeChange(docPath, selectedVersion, change);
 		versionView.selectVersion(addedVersion);
 	}
 
-	private void retrieveAllChanges() {
+	private void retrieveAllChanges(String docPath) {
 		if (modelRepoService == null) {
 			modelRepoService = GWT.create(ModelRepositoryService.class);
 		}
@@ -144,10 +152,10 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 			}
 		};
 
-		modelRepoService.getAllChanges(callback);
+		modelRepoService.getAllChanges(docPath, callback);
 	}
 
-	private void storeChange(Version baseVersion, Command change) {
+	private void storeChange(String docPath, Version baseVersion, Command change) {
 		if (modelRepoService == null) {
 			modelRepoService = GWT.create(ModelRepositoryService.class);
 		}
@@ -156,17 +164,17 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 
 			@Override
 			public void onSuccess(String result) {
-				System.out.println("Tempo.storeChange.callback.onSuccess()");
+				logger.log(Level.FINE, "Tempo.storeChange.callback.onSuccess()");
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
-				System.out.println("Tempo.storeChange.callback.onFailure()");
+				logger.log(Level.FINE, "Tempo.storeChange.callback.onFailure()");
 				GWT.log("failed", caught);
 			}
 		};
 
-		modelRepoService.addCommand(baseVersion.getName(), change, callback);
+		modelRepoService.addCommand(docPath, baseVersion.getName(), change, callback);
 	}
 
 	@Override
@@ -177,14 +185,14 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 
 					@Override
 					public void undo(Command change) {
-						System.out.println("undo(" + change.getDescription()
+						logger.log(Level.FINE, "undo(" + change.getDescription()
 								+ ")");
 						change.undo(modelModel);
 					}
 
 					@Override
 					public void execute(Command change) {
-						System.out.println("execute(" + change.getDescription()
+						logger.log(Level.FINE, "execute(" + change.getDescription()
 								+ ")");
 						change.execute(modelModel);
 					}

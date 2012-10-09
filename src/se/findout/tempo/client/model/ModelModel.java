@@ -5,8 +5,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ModelModel {
+    private final static Logger logger = Logger.getLogger(ModelModel.class.getName());
 	private Map<String, Box> boxes = new HashMap<String, ModelModel.Box>();
 	private List<ModelChangeListener> changeListeners = new ArrayList<ModelModel.ModelChangeListener>();
 	
@@ -57,13 +60,13 @@ public class ModelModel {
 }
 
 	public void addBox(Box box) {
-		System.out.println("ModelModel.addBox(" + box + ")");
+		logger.log(Level.FINE, "ModelModel.addBox(" + box + ")");
 		boxes.put(box.getId(), box);
 		fireBoxAdded(box);
 	}
 
 	public void deleteBox(String id) {
-		System.out.println("ModelModel.deleteBox(" + id + ")");
+		logger.log(Level.FINE, "ModelModel.deleteBox(" + id + ")");
 		Box box = boxes.get(id);
 		if (box != null) {
 			boxes.remove(id);
@@ -87,7 +90,7 @@ public class ModelModel {
 	}
 	
 	private void fireBoxDeleted(String id) {
-		System.out.println("ModelModel.fireBoxDeleted(" + id + ")");
+		logger.log(Level.FINE, "ModelModel.fireBoxDeleted(" + id + ")");
 		for (ModelChangeListener listener : changeListeners) {
 			listener.deleteBox(id);
 		}

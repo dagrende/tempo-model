@@ -1,12 +1,15 @@
 package se.findout.tempo.client.model;
 
 import java.io.Serializable;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import se.findout.tempo.client.model.ModelModel.Box;
 
 
 public class CreateRectangleCommand implements Command, Serializable {
-	private static final long serialVersionUID = 1L;
+    private final static Logger logger = Logger.getLogger(CreateRectangleCommand.class.getName());
+    private static final long serialVersionUID = 1L;
 	private String id;
 	private int x;
 	private int y;
@@ -26,12 +29,13 @@ public class CreateRectangleCommand implements Command, Serializable {
 
 	@Override
 	public void execute(ModelModel modelModel) {
+		logger.log(Level.FINE, "");
 		modelModel.addBox(new Box(id, x, y, width, height));
 	}
 
 	@Override
 	public void undo(ModelModel modelModel) {
-		System.out.println("ModelEditorView.CreateRectangleCommand.undo()");
+		logger.log(Level.FINE, "");
 		modelModel.deleteBox(id);
 	}
 

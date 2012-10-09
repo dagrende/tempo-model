@@ -10,6 +10,6 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 
 @RemoteServiceRelativePath("modelRepository")
 public interface ModelRepositoryService extends RemoteService {
-	String addCommand(String versionId, Command command);
-	List<ChangeInfo> getAllChanges();
+	String addCommand(String docPath, String versionId, Command command);
+	List<ChangeInfo> getAllChanges(String docPath);
 }

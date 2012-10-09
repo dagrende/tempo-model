@@ -5,8 +5,11 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class VersionModel {
+    private final static Logger logger = Logger.getLogger(VersionModel.class.getName());
 	private final List<Version> heads = new ArrayList<Version>();
 	private final List<Version> allVersions = new ArrayList<Version>();
 	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionModel.VersionChangeListener>();
@@ -22,7 +25,7 @@ public class VersionModel {
 	}
 	
 	public Version addVersion(Version base, Command change) {
-		System.out.println("VersionModel.addVersion('" + base.getName() + "', " + change + ")");
+		logger.log(Level.FINE, "VersionModel.addVersion('" + base.getName() + "', " + change + ")");
 		int i = heads.indexOf(base);
 		String name = i == -1 ? base.getName() + ".1" : incVersion(base.getName());
 		Version newVersion = new Version(name, base, change);
@@ -122,7 +125,7 @@ public class VersionModel {
 	 * @param to the version we want
 	 */
 	public void switchVersion(Version from, Version to, ChangeIterator changeIterator) {
-		System.out.println("VersionModel.switchVersion(" + from + ", " + to + ")");
+		logger.log(Level.FINE, "VersionModel.switchVersion(" + from + ", " + to + ")");
 		Set<Version> undoVersions = new HashSet<Version>();
 		Version v = from;
 		while (v != null) {

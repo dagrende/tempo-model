@@ -29,7 +29,8 @@ import com.google.gwt.user.client.ui.SplitLayoutPanel;
 import com.google.gwt.user.client.ui.VerticalPanel;
 
 /**
- * Entry point classes define <code>onModuleLoad()</code>.
+ * The main program for the Tempo Model editor.
+ * Places an 
  */
 public class Tempo implements EntryPoint, EditorCommandListener,
 		SelectionChangeListener {

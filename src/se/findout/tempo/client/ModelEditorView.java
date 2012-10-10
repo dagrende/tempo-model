@@ -20,6 +20,21 @@ import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
 
+/**
+ * A model editor for editing a model represented by a ModelModel. Has a palette
+ * with commands Rectangle and Delete. Select Rectangle and click to create a
+ * box object there. Select Delete and click a box to delete it.
+ * 
+ * The editor adds a ModelChangeListener to the model in order to display
+ * changes.
+ * 
+ * The editor doesn't change the model directly on user commands, but creates a
+ * command object for the intended change and sends it to EditorCommandListeners
+ * added to the editor. A mediator is expected to listen to editor coammnds and apply them on the model.
+ * 
+ * @author dag
+ * 
+ */
 public class ModelEditorView extends FlowPanel implements ToolSelectionListener {
 	private List<EditorCommandListener> editorCommandListeners = new ArrayList<ModelEditorView.EditorCommandListener>();
 	private DrawingArea drawingArea;
@@ -30,51 +45,57 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 
 	public ModelEditorView(ModelModel modelModel) {
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
-		
+
 		toolPalette = new ToolPalette();
-		toolPalette.addTool("rectangle", "Rectangle", "Select this tool and click in drawing area to create a rectangle");
-		toolPalette.addTool("delete", "Delete", "Select this tool and click on object to delete it");
+		toolPalette
+				.addTool("rectangle", "Rectangle",
+						"Select this tool and click in drawing area to create a rectangle");
+		toolPalette.addTool("delete", "Delete",
+				"Select this tool and click on object to delete it");
 		toolPalette.addSelectionListener(this);
 		horizontalPanel.add(toolPalette);
-		
+
 		drawingArea = new DrawingArea(1600, 900);
 		drawingArea.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
 				if ("rectangle".equals(toolPalette.getSelectedTool())) {
-					createRectangle(createId(), event.getX(), event.getY(), 50, 50);
+					createRectangle(createId(), event.getX(), event.getY(), 50,
+							50);
 				}
 			}
 		});
 		horizontalPanel.add(drawingArea);
-		
+
 		add(horizontalPanel);
 		toolPalette.selectTool("rectangle");
-		
+
 		modelModel.addChangeListener(new ModelModel.ModelChangeListener() {
 			@Override
 			public void addBox(Box box) {
-				Rectangle rectangle = new Rectangle(box.getX(), box.getY(), box.getWidth(), box.getHeight());
+				Rectangle rectangle = new Rectangle(box.getX(), box.getY(), box
+						.getWidth(), box.getHeight());
 				rectangle.addClickHandler(modelItemClickHandler);
 				ModelItem modelItem = new ModelItem(box.getId(), rectangle);
 				modelItems.add(modelItem);
 				drawingArea.add(rectangle);
 			}
-			
+
 			@Override
 			public void deleteBox(String id) {
 				ModelItem deletedItem = getItemById(id);
 				if (deletedItem != null) {
 					System.out
-							.println("ModelEditorView.ModelEditorView(...).new ModelChangeListener() {...}.deleteBox(" + id + ")");
+							.println("ModelEditorView.ModelEditorView(...).new ModelChangeListener() {...}.deleteBox("
+									+ id + ")");
 					drawingArea.remove(deletedItem.getVo());
 					modelItems.remove(deletedItem);
 				}
 			}
-			
+
 		});
 	}
-	
+
 	private String createId() {
 		while (true) {
 			nextId++;
@@ -86,7 +107,8 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	}
 
 	public void createRectangle(String id, int x, int y, int width, int height) {
-		CreateRectangleCommand change = new CreateRectangleCommand(id, x, y, width, height);
+		CreateRectangleCommand change = new CreateRectangleCommand(id, x, y,
+				width, height);
 		fireChange(change);
 	}
 
@@ -128,17 +150,17 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 	public class ModelItem {
 		private final String id;
 		private final VectorObject vo;
-		
+
 		public ModelItem(String id, VectorObject vo) {
 			super();
 			this.id = id;
 			this.vo = vo;
 		}
-		
+
 		public String getId() {
 			return id;
 		}
-		
+
 		public VectorObject getVo() {
 			return vo;
 		}
@@ -152,11 +174,11 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 		}
 		return null;
 	}
-	
+
 	static interface EditorCommandListener {
 		void change(Command change);
 	}
-	
+
 	public void addModelChangelListener(EditorCommandListener listener) {
 		editorCommandListeners.add(listener);
 	}

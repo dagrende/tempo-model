@@ -50,7 +50,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements 
 		changeEntity.setProperty("creator", user.getNickname());
 		DatastoreServiceFactory.getDatastoreService().put(changeEntity);
 		
-		return "successor of " + versionId;
+		return versionId;
 	}
 
 	/**

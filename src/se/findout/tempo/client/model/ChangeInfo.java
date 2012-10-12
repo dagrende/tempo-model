@@ -4,28 +4,28 @@ import java.io.Serializable;
 
 public class ChangeInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private String versionId;
+	private String baseVersion;
 	private Command change;
 	
 	public ChangeInfo() {
 	}
 	
-	public ChangeInfo(String versionId, Command change) {
+	public ChangeInfo(String baseVersion, Command change) {
 		super();
-		this.versionId = versionId;
+		this.baseVersion = baseVersion;
 		this.change = change;
 	}
 	
 	@Override
 	public String toString() {
-		return "ChangeInfo(" + versionId + ", " + change + ")";
+		return "ChangeInfo(" + baseVersion + ", " + change + ")";
 	}
-	public String getVersionId() {
-		return versionId;
+	public String getBaseVersion() {
+		return baseVersion;
 	}
 
 	public void setVersionId(String versionId) {
-		this.versionId = versionId;
+		this.baseVersion = versionId;
 	}
 
 	public Command getChange() {

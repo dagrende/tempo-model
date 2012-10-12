@@ -22,7 +22,8 @@
 
   <!-- Other module inherits                                      -->
   <inherits name='org.vaadin.gwtgraphics.GWTGraphics'/>
-
+  <inherits name='com.google.gwt.appengine.channel.Channel'/>
+  
   <!-- Specify the app entry point class.                         -->
   <entry-point class='se.findout.tempo.client.Tempo'/>
 

@@ -18,12 +18,13 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 public interface ModelRepositoryService extends RemoteService {
 	/**
 	 * Stores a command on a version in the database.
+	 * @param channelId 
 	 * @param documentName name of the document to store the command into
 	 * @param baseVersion version that the command is applied to
 	 * @param command the command to apply
 	 * @return the baseVersion - not used by now
 	 */
-	String addCommand(String documentName, String baseVersion, Command command);
+	String addCommand(String channelId, String documentName, String baseVersion, Command command);
 	
 	/**
 	 * Returns all changes and their baseVersion, stored for the named document so far

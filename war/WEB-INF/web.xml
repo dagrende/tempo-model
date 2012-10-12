@@ -17,6 +17,16 @@
   </servlet>
   
   <servlet>
+      <servlet-name>ChannelConnectedServlet</servlet-name>
+      <servlet-class>se.findout.tempo.server.ChannelConnectedServlet</servlet-class>
+  </servlet>
+  
+    <servlet>
+      <servlet-name>ChannelDisconnectedServlet</servlet-name>
+      <servlet-class>se.findout.tempo.server.ChannelDisconnectedServlet</servlet-class>
+  </servlet>
+  
+  <servlet>
     <servlet-name>SystemServiceServlet</servlet-name>
     <servlet-class>com.google.api.server.spi.SystemServiceServlet</servlet-class>
     <init-param>
@@ -36,8 +46,18 @@
   </servlet-mapping>
   
   <servlet-mapping>
+    <servlet-name>ChannelConnectedServlet</servlet-name>
+    <url-pattern>/_ah/channel/connected/*</url-pattern>
+  </servlet-mapping>
+    
+  <servlet-mapping>
+    <servlet-name>ChannelDisconnectedServlet</servlet-name>
+    <url-pattern>/_ah/channel/disconnected/*</url-pattern>
+  </servlet-mapping>
+    
+  <servlet-mapping>
     <servlet-name>SystemServiceServlet</servlet-name>
     <url-pattern>/_ah/spi/*</url-pattern>
   </servlet-mapping>
-
+  
 </web-app>

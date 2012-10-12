@@ -41,11 +41,9 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 /**
  * The main program for the Tempo Model editor. Places an
  */
-public class Tempo implements EntryPoint, EditorCommandListener,
-		SelectionChangeListener {
-	private final static Logger logger = Logger
-			.getLogger(Tempo.class.getName());
-	private VersionModel model;
+public class Tempo implements EntryPoint, EditorCommandListener, SelectionChangeListener {
+	private final static Logger logger = Logger.getLogger(Tempo.class.getName());
+	private VersionModel versionModel;
 	private VersionView versionView;
 	private ModelModel modelModel;
 	private ModelRepositoryServiceAsync modelRepoService = null;
@@ -69,25 +67,21 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 
 		// Check login status using login service.
 		LoginServiceAsync loginService = GWT.create(LoginService.class);
-		loginService.login(GWT.getHostPageBaseURL(),
-				new AsyncCallback<LoginInfo>() {
-					public void onFailure(Throwable error) {
-					}
+		loginService.login(GWT.getHostPageBaseURL(), new AsyncCallback<LoginInfo>() {
+			public void onFailure(Throwable error) {
+			}
 
-					public void onSuccess(LoginInfo result) {
-						loginInfo = result;
-						signOutLink.setHref(loginInfo.getLogoutUrl());
-						if (loginInfo.isLoggedIn()) {
-							logger.log(
-									Level.FINE,
-									"channelToken="
-											+ loginInfo.getChannelToken());
-							setupUI();
-						} else {
-							loadLogin();
-						}
-					}
-				});
+			public void onSuccess(LoginInfo result) {
+				loginInfo = result;
+				signOutLink.setHref(loginInfo.getLogoutUrl());
+				if (loginInfo.isLoggedIn()) {
+					logger.log(Level.FINE, "channelToken=" + loginInfo.getChannelToken());
+					setupUI();
+				} else {
+					loadLogin();
+				}
+			}
+		});
 		// setupUI();
 	}
 
@@ -113,13 +107,12 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 				splitPanel.setHeight(height + "px");
 			}
 		});
-		splitPanel.getElement().getStyle()
-				.setProperty("border", "3px solid #e7e7e7");
+		splitPanel.getElement().getStyle().setProperty("border", "3px solid #e7e7e7");
 
-		model = new VersionModel();
+		versionModel = new VersionModel();
 
-		versionView = new VersionView(model);
-		versionView.selectVersion(model.getInitialVersion());
+		versionView = new VersionView(versionModel);
+		versionView.selectVersion(versionModel.getInitialVersion());
 		versionView.addSelectionChangeListener(this);
 		splitPanel.addSouth(versionView, 200);
 
@@ -143,59 +136,60 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 				channel.open(new SocketListener() {
 					@Override
 					public void onOpen() {
-						logger.log(
-								Level.FINE,
+						logger.log(Level.FINE,
 								"Channel opened for token " + loginInfo.getChannelToken());
-						
-						
+
 					}
 
 					@Override
 					public void onMessage(String message) {
-						logger.log(
-								Level.FINE,
-								"Received: " + message);
-						// add change to versionModel and select new node if the selected node was changed
+						logger.log(Level.FINE, "Received: " + message);
+						// add change to versionModel and select new
+						// node if the selected node was changed
 						JSONObject jsonObject = JSONParser.parseStrict(message).isObject();
-						String baseVersionName = jsonObject.get("baseVersion").isString().stringValue();
+						String baseVersionName = jsonObject.get("baseVersion").isString()
+								.stringValue();
 						Command change = getCommandFromJson(jsonObject);
 						Version selectedVersion = versionView.getSelectedVersion();
-						Version baseVersion = model.getVersionById(baseVersionName);
-						model.addVersion(baseVersion, change);
-//						if (selectedVersion != null && selectedVersion.getName().equals(baseVersionName)) {
-//							versionView.selectVersion(version)
-//						}
+						Version baseVersion = versionModel.getVersionById(baseVersionName);
+						boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
+						Version newVersion = versionModel.addVersion(baseVersion, change);
+						logger.log(Level.FINE,
+								"versionModel.getHeads()=" + versionModel.getHeads() 
+								+ " selectedVersion= " + selectedVersion
+								+ " isOnHead=" + isOnHead);
+
+						if (isOnHead
+								&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
+							versionView.selectVersion(newVersion);
+						}
 					}
 
 					@Override
 					public void onError(SocketError error) {
-						logger.log(
-								Level.FINE,
-								"Error: " + error.getDescription());
+						logger.log(Level.FINE, "Error: " + error.getDescription());
 					}
 
 					@Override
 					public void onClose() {
-						logger.log(
-								Level.FINE,
-								"Channel closed!");
+						logger.log(Level.FINE, "Channel closed!");
 					}
 				});
 			}
 		});
 	}
 
-	private Command getCommandFromJson(	JSONObject jsonObject) {
+	private Command getCommandFromJson(JSONObject jsonObject) {
 		if (jsonObject != null) {
 			String commandType = jsonObject.get("commandType").isString().stringValue();
 			JSONObject jsonCommandObject = jsonObject.get("command").isObject();
 			if (jsonCommandObject != null) {
 				if ("se.findout.tempo.client.model.CreateRectangleCommand".equals(commandType)) {
 					String id = jsonCommandObject.get("id").isString().stringValue();
-					int x = (int)jsonCommandObject.get("x").isNumber().doubleValue();
-					int y = (int)jsonCommandObject.get("y").isNumber().doubleValue();
-					int width = (int)jsonCommandObject.get("width").isNumber().doubleValue();
-					int height = (int)jsonCommandObject.get("height").isNumber().doubleValue();
+					int x = (int) jsonCommandObject.get("x").isNumber().doubleValue();
+					int y = (int) jsonCommandObject.get("y").isNumber().doubleValue();
+					int width = (int) jsonCommandObject.get("width").isNumber().doubleValue();
+					int height = (int) jsonCommandObject.get("height").isNumber().doubleValue();
 					return new CreateRectangleCommand(id, x, y, width, height);
 				} else if ("se.findout.tempo.client.model.DeleteCommand".equals(commandType)) {
 					String id = jsonCommandObject.get("id").isString().stringValue();
@@ -205,11 +199,11 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 		}
 		throw new IllegalArgumentException("json syntax error");
 	}
-	
+
 	@Override
 	public void change(Command change) {
 		Version selectedVersion = versionView.getSelectedVersion();
-		Version addedVersion = model.addVersion(selectedVersion, change);
+		Version addedVersion = versionModel.addVersion(selectedVersion, change);
 		storeChange(docPath, selectedVersion, change);
 		versionView.selectVersion(addedVersion);
 	}
@@ -227,17 +221,16 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 						.println("Tempo.retrieveAllChanges().new AsyncCallback() {...}.onSuccess("
 								+ result + ")");
 				for (ChangeInfo changeInfo : result) {
-					model.addVersion(
-							model.getVersionById(changeInfo.getBaseVersion()),
+					versionModel.addVersion(
+							versionModel.getVersionById(changeInfo.getBaseVersion()),
 							changeInfo.getChange());
 				}
-				versionView.selectVersion(model.getHeads().get(0));
+				versionView.selectVersion(versionModel.getHeads().get(0));
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
-				System.out
-						.println("Tempo.storeChange(...).new AsyncCallback() {...}.onFailure()");
+				System.out.println("Tempo.storeChange(...).new AsyncCallback() {...}.onFailure()");
 				GWT.log("failed", caught);
 			}
 		};
@@ -264,27 +257,24 @@ public class Tempo implements EntryPoint, EditorCommandListener,
 			}
 		};
 
-		modelRepoService.addCommand(loginInfo.getChannelId(), docPath, baseVersion.getName(), change,
-				callback);
+		modelRepoService.addCommand(loginInfo.getChannelId(), docPath, baseVersion.getName(),
+				change, callback);
 	}
 
 	@Override
 	public void selectionChanged(SelectionChangedEvent event) {
-		model.switchVersion(event.getPrevSelectedVersion(),
-				event.getNewSelectedVersion(),
+		versionModel.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion(),
 				new VersionModel.ChangeIterator() {
 
 					@Override
 					public void undo(Command change) {
-						logger.log(Level.FINE,
-								"undo(" + change.getDescription() + ")");
+						logger.log(Level.FINE, "undo(" + change.getDescription() + ")");
 						change.undo(modelModel);
 					}
 
 					@Override
 					public void execute(Command change) {
-						logger.log(Level.FINE,
-								"execute(" + change.getDescription() + ")");
+						logger.log(Level.FINE, "execute(" + change.getDescription() + ")");
 						change.execute(modelModel);
 					}
 				});

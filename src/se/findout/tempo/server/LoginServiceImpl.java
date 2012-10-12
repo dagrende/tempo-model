@@ -1,5 +1,8 @@
 package se.findout.tempo.server;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import se.findout.tempo.client.login.LoginInfo;
 import se.findout.tempo.client.login.LoginService;
 
@@ -12,6 +15,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 public class LoginServiceImpl extends RemoteServiceServlet implements
 		LoginService {
+	private static SimpleDateFormat channelIdTimeFormat = new SimpleDateFormat("HHmmss");
 
 	public LoginInfo login(String requestUri) {
 		UserService userService = UserServiceFactory.getUserService();
@@ -26,7 +30,7 @@ public class LoginServiceImpl extends RemoteServiceServlet implements
 
 			String userId = user.getUserId();
 			ChannelService channelService = ChannelServiceFactory.getChannelService();
-			String channelId = "tempo-model-" + userId;
+			String channelId = "tempo-model-" + channelIdTimeFormat.format(new Date()) + "-" + userId;
 			loginInfo.setChannelId(channelId);
 			String token = channelService.createChannel(channelId);
 			loginInfo.setChannelToken(token);

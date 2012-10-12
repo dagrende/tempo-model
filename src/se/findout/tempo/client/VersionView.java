@@ -81,6 +81,7 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 		drawingArea.clear();
 		selectedVersionCircle = null;
 		versionTreeRenderer.render();
+		showSelection(selectedVersion);
 	}
 
 	private final class VersionClickHandler implements ClickHandler {
@@ -100,26 +101,34 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 		logger.log(Level.FINE, "VersionView.selectVersion(" + version + ")");
 		if (version != selectedVersion) {
 			if (version == null) {
-				if (selectedVersionCircle != null) {
-					drawingArea.remove(selectedVersionCircle);
-				}
+				showSelection(version);
 			} else {
-				Circle versionCircle = versionToCircle.get(version);
-				if (selectedVersionCircle != null) {
-					selectedVersionCircle.setX(versionCircle.getX());
-					selectedVersionCircle.setY(versionCircle.getY());
-				} else {
-					Circle selectionCircle = new Circle(versionCircle.getX(), versionCircle.getY(), versionCircle.getRadius() + 4);
-					selectionCircle.setFillOpacity(0.0);
-					selectionCircle.setStrokeWidth(3);
-					selectedVersionCircle = selectionCircle;
-					drawingArea.add(selectionCircle);
-				}
+				showSelection(version);
 				Version prevSelectedVersion = selectedVersion;
 				selectedVersion = version;
 				for (SelectionChangeListener listener : selectionChangeListeners) {
 					listener.selectionChanged(new SelectionChangedEvent(this, prevSelectedVersion, version));
 				}
+			}
+		}
+	}
+
+	private void showSelection(Version version) {
+		if (version == null) {
+			if (selectedVersionCircle != null) {
+				drawingArea.remove(selectedVersionCircle);
+			}
+		} else {
+			Circle versionCircle = versionToCircle.get(version);
+			if (selectedVersionCircle != null) {
+				selectedVersionCircle.setX(versionCircle.getX());
+				selectedVersionCircle.setY(versionCircle.getY());
+			} else {
+				Circle selectionCircle = new Circle(versionCircle.getX(), versionCircle.getY(), versionCircle.getRadius() + 4);
+				selectionCircle.setFillOpacity(0.0);
+				selectionCircle.setStrokeWidth(3);
+				selectedVersionCircle = selectionCircle;
+				drawingArea.add(selectionCircle);
 			}
 		}
 	}

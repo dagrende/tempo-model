@@ -78,13 +78,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	}
 
 	private void sendToParticipants(String fromChannelId, String versionId, Command change) {
-		Query query = new Query("Participant").setKeysOnly();
-		Iterable<Entity> iterable = DatastoreServiceFactory
-				.getDatastoreService().prepare(query).asIterable();
-		System.out
-				.println("ModelRepositoryServiceImpl.sendToParticipants() send to channelId:");
-		for (Entity entity : iterable) {
-			String channelId = entity.getKey().getName();
+		for (String channelId : ParticipantRegistry.getInstance().getChannelIds()) {
 			if (!channelId.equals(fromChannelId)) {
 				ChannelService channelService = ChannelServiceFactory
 						.getChannelService();

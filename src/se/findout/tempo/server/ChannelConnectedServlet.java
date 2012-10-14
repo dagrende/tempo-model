@@ -1,6 +1,7 @@
 package se.findout.tempo.server;
 
 import java.io.IOException;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -8,6 +9,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import com.google.appengine.api.channel.ChannelPresence;
+import com.google.appengine.api.channel.ChannelService;
+import com.google.appengine.api.channel.ChannelServiceFactory;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 
 public class ChannelConnectedServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
@@ -18,6 +25,10 @@ public class ChannelConnectedServlet extends HttpServlet {
 			throws ServletException, IOException {
 		logger.log(Level.FINE, "");
 		System.out.println("ChannelConnectedServlet.doPost()");
-		ParticipantRegistry.add(req);
+		ChannelService channelService = ChannelServiceFactory.getChannelService();
+		ChannelPresence presence = channelService.parsePresence(req);
+		
+		ParticipantRegistry.getInstance().addParticipant(presence.clientId());
 	}
+
 }

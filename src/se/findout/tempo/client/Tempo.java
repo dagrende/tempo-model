@@ -28,10 +28,11 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONValue;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.SerializationStreamFactory;
+import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -55,6 +56,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	private Anchor signInLink = new Anchor("Sign In");
 	private Anchor signOutLink = new Anchor("Sign Out");
 	private String docPath;
+	private SerializationStreamFactory pushServiceStreamFactory;
 
 	/**
 	 * This is the entry point method.
@@ -130,6 +132,8 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	 * Create a channel for the token from loginInfo and open a listener to it.
 	 */
 	private void setupChannel() {
+		pushServiceStreamFactory = (SerializationStreamFactory) GWT.create(PushService.class);
+		
 		ChannelFactory.createChannel(loginInfo.getChannelToken(), new ChannelCreatedCallback() {
 			@Override
 			public void onChannelCreated(Channel channel) {
@@ -144,25 +148,26 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 					@Override
 					public void onMessage(String message) {
 						logger.log(Level.FINE, "Received: " + message);
-						// add change to versionModel and select new
-						// node if the selected node was changed
-						JSONObject jsonObject = JSONParser.parseStrict(message).isObject();
-						String baseVersionName = jsonObject.get("baseVersion").isString()
-								.stringValue();
-						Command change = getCommandFromJson(jsonObject);
-						Version selectedVersion = versionView.getSelectedVersion();
-						Version baseVersion = versionModel.getVersionById(baseVersionName);
-						boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
-						Version newVersion = versionModel.addVersion(baseVersion, change);
-						logger.log(Level.FINE,
-								"versionModel.getHeads()=" + versionModel.getHeads() 
-								+ " selectedVersion= " + selectedVersion
-								+ " isOnHead=" + isOnHead);
-
-						if (isOnHead
-								&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
-							versionView.selectVersion(newVersion);
-						}
+						ChangeInfo changeInfo = null;
+				        try {
+				            SerializationStreamReader reader = pushServiceStreamFactory.createStreamReader(message);
+				            changeInfo = (ChangeInfo) reader.readObject();
+				            Version selectedVersion = versionView.getSelectedVersion();
+				            Version baseVersion = versionModel.getVersionById(changeInfo.getBaseVersion());
+				            boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
+				            Version newVersion = versionModel.addVersion(baseVersion, changeInfo.getChange());
+				            logger.log(Level.FINE,
+				            		"versionModel.getHeads()=" + versionModel.getHeads() 
+				            		+ " selectedVersion= " + selectedVersion
+				            		+ " isOnHead=" + isOnHead);
+				            
+				            if (isOnHead
+				            		&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
+				            	versionView.selectVersion(newVersion);
+				            }
+				          } catch (SerializationException e) {
+				            throw new RuntimeException("Unable to deserialize " + message, e);
+				          }
 					}
 
 					@Override

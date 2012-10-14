@@ -11,7 +11,6 @@ import se.findout.tempo.client.ModelRepositoryService;
 import se.findout.tempo.client.model.ChangeInfo;
 import se.findout.tempo.client.model.Command;
 
-import com.google.appengine.api.channel.ChannelMessage;
 import com.google.appengine.api.channel.ChannelService;
 import com.google.appengine.api.channel.ChannelServiceFactory;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -30,30 +29,15 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		ModelRepositoryService {
-	public class ChangeInfo2 {
-		private String baseVersion;
-		private String commandType;
-		private Command command;
-
-		public ChangeInfo2(String baseVersion, String commandType, Command command) {
-			this.baseVersion = baseVersion;
-			this.commandType = commandType;
-			this.command = command;
-		}
-
-	}
-
-	private final static Logger logger = Logger
-			.getLogger(ModelRepositoryServiceImpl.class.getName());
+	private final static Logger logger = Logger.getLogger(ModelRepositoryServiceImpl.class
+			.getName());
 	private static final long serialVersionUID = 1L;
 	private Gson gson = new Gson();
 
 	@Override
-	public String addCommand(String channelId, String docPath,
-			String versionId, Command command) {
-		logger.log(Level.FINE,
-				"ModelRepositoryServiceImpl.addCommand(" + channelId + ", "
-						+ versionId + ", " + command.getDescription() + ")");
+	public String addCommand(String channelId, String docPath, String versionId, Command command) {
+		logger.log(Level.FINE, "ModelRepositoryServiceImpl.addCommand(" + channelId + ", "
+				+ versionId + ", " + command.getDescription() + ")");
 
 		UserService userService = UserServiceFactory.getUserService();
 		User user = userService.getCurrentUser();
@@ -80,12 +64,8 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	private void sendToParticipants(String fromChannelId, String versionId, Command change) {
 		for (String channelId : ParticipantRegistry.getInstance().getChannelIds()) {
 			if (!channelId.equals(fromChannelId)) {
-				ChannelService channelService = ChannelServiceFactory
-						.getChannelService();
-				ChangeInfo2 changeInfo2 = new ChangeInfo2(versionId, change.getClass().getName(), change);
-				String json = gson.toJson(changeInfo2);
-				System.out.println("  " + channelId + " " + json);
-				channelService.sendMessage(new ChannelMessage(channelId, json));
+				ChannelService channelService = ChannelServiceFactory.getChannelService();
+				PushServer.sendMessageByKey(channelId, new ChangeInfo(versionId, change));
 			}
 		}
 	}
@@ -99,8 +79,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	private Key getDocumentKeyByName(String name) {
 		List<Entity> docsWithKey = findDocumentsByName(name);
 		if (docsWithKey.size() > 1) {
-			logger.log(Level.WARNING, "Multiple documents with same name: '"
-					+ name + "'");
+			logger.log(Level.WARNING, "Multiple documents with same name: '" + name + "'");
 		}
 		if (docsWithKey.isEmpty()) {
 			return null;
@@ -123,8 +102,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		}
 		Query query = new Query("Document").setKeysOnly().setFilter(
 				new FilterPredicate("name", FilterOperator.EQUAL, name));
-		List<Entity> docsWithKey = DatastoreServiceFactory
-				.getDatastoreService().prepare(query)
+		List<Entity> docsWithKey = DatastoreServiceFactory.getDatastoreService().prepare(query)
 				.asList(FetchOptions.Builder.withLimit(2));
 		return docsWithKey;
 	}
@@ -143,8 +121,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		documentEntity.setProperty("name", docName);
 		documentEntity.setProperty("createTime", new Date());
 		documentEntity.setProperty("creator", userNickName);
-		return DatastoreServiceFactory.getDatastoreService()
-				.put(documentEntity);
+		return DatastoreServiceFactory.getDatastoreService().put(documentEntity);
 	}
 
 	/**
@@ -154,18 +131,18 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	public List<ChangeInfo> getAllChanges(String docName) {
 		Key documentKey = getDocumentKeyByName(docName);
 		if (documentKey != null) {
-			Query query = new Query("Change").setAncestor(documentKey).addSort(
-					"createTime", Query.SortDirection.ASCENDING);
-			Iterable<Entity> channelEntities = DatastoreServiceFactory
-					.getDatastoreService().prepare(query).asIterable();
+			Query query = new Query("Change").setAncestor(documentKey).addSort("createTime",
+					Query.SortDirection.ASCENDING);
+			Iterable<Entity> channelEntities = DatastoreServiceFactory.getDatastoreService()
+					.prepare(query).asIterable();
 			List<ChangeInfo> changeInfos = new ArrayList<ChangeInfo>();
 			for (Entity entity : channelEntities) {
 				String versionId = (String) entity.getProperty("baseVersion");
 				String changeType = (String) entity.getProperty("changeType");
 				String changeData = (String) entity.getProperty("changeData");
 				try {
-					changeInfos.add(new ChangeInfo(versionId, (Command) gson
-							.fromJson(changeData, Class.forName(changeType))));
+					changeInfos.add(new ChangeInfo(versionId, (Command) gson.fromJson(changeData,
+							Class.forName(changeType))));
 				} catch (JsonSyntaxException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

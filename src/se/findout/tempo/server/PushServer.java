@@ -37,7 +37,7 @@ public class PushServer {
 	 * @param msg
 	 *            The message to be sent.
 	 */
-	public static void sendMessageByKey(String channelId, ChangeInfo msg) {
+	public static void sendMessageByKey(String channelId, Object msg) {
 		String encodedMessage = encodeMessage(msg);
 		try {
 			getChannelService().sendMessage(new ChannelMessage(channelId, encodedMessage));
@@ -78,7 +78,7 @@ public class PushServer {
 		return new MergedSerializationPolicy(policies);
 	}
 
-	private static String encodeMessage(ChangeInfo msg) {
+	private static String encodeMessage(Object msg) {
 		try {
 			return RPC.encodeResponseForSuccess(dummyMethod, msg, serializationPolicy);
 		} catch (SerializationException e) {

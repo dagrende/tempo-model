@@ -1,11 +1,17 @@
 package se.findout.tempo.client.model;
 
-public class Participant {
+import java.io.Serializable;
+
+public class Participant implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private String userAlias;
 	private String userId;
 	private String channelId;
 	private String docPath;
 	private boolean connected = false;
+	
+	public Participant() {
+	}
 	
 	public Participant(String channelId) {
 		this.channelId = channelId;

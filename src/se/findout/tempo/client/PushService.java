@@ -23,4 +23,5 @@ public interface PushService extends RemoteService {
 	 * serializable.
 	 */
 	ChangeInfo receiveMessage();
+	ParticipantInfo receiveMessage2();
 }

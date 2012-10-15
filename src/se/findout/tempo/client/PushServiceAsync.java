@@ -8,4 +8,6 @@ public interface PushServiceAsync {
 
 	void receiveMessage(AsyncCallback<ChangeInfo> callback);
 
+	void receiveMessage2(AsyncCallback<ParticipantInfo> callback);
+
 }

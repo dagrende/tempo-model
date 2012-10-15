@@ -34,6 +34,8 @@ public class LoginServiceImpl extends RemoteServiceServlet implements
 			loginInfo.setChannelId(channelId);
 			String token = channelService.createChannel(channelId);
 			loginInfo.setChannelToken(token);
+			
+			loginInfo.setParticipants(ParticipantRegistry.getInstance().getParticipants());
 
 		} else {
 			loginInfo.setLoggedIn(false);

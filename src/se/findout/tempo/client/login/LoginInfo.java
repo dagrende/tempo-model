@@ -1,9 +1,13 @@
 package se.findout.tempo.client.login;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
+import se.findout.tempo.client.model.Participant;
 
 public class LoginInfo implements Serializable {
-
+	private static final long serialVersionUID = 1L;
 	private boolean loggedIn = false;
 	private String loginUrl;
 	private String logoutUrl;
@@ -11,7 +15,11 @@ public class LoginInfo implements Serializable {
 	private String nickname;
 	private String channelToken;
 	private String channelId;
+	private List<Participant> participants = new ArrayList<Participant>();
 
+	public LoginInfo() {
+	}
+	
 	public boolean isLoggedIn() {
 		return loggedIn;
 	}
@@ -66,5 +74,13 @@ public class LoginInfo implements Serializable {
 
 	public void setChannelId(String channelId) {
 		this.channelId = channelId;
+	}
+	
+	public List<Participant> getParticipants() {
+		return participants;
+	}
+
+	public void setParticipants(List<Participant> participants) {
+		this.participants = participants;
 	}
 }

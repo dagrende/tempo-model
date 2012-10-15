@@ -15,6 +15,7 @@ import se.findout.tempo.client.model.Command;
 import se.findout.tempo.client.model.CreateRectangleCommand;
 import se.findout.tempo.client.model.DeleteCommand;
 import se.findout.tempo.client.model.ModelModel;
+import se.findout.tempo.client.model.ParticipantModel;
 import se.findout.tempo.client.model.Version;
 import se.findout.tempo.client.model.VersionModel;
 
@@ -57,6 +58,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	private Anchor signOutLink = new Anchor("Sign Out");
 	private String docPath;
 	private SerializationStreamFactory pushServiceStreamFactory;
+	private ParticipantModel participantModel;
 
 	/**
 	 * This is the entry point method.
@@ -111,12 +113,19 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		});
 		splitPanel.getElement().getStyle().setProperty("border", "3px solid #e7e7e7");
 
+		final SplitLayoutPanel versionsAndParticipants = new SplitLayoutPanel(8);
 		versionModel = new VersionModel();
+		
+		participantModel = new ParticipantModel();
+		participantModel.setParticipants(loginInfo.getParticipants());
+		ParticpantView particpantView = new ParticpantView(participantModel);
+		versionsAndParticipants.addEast(particpantView, 200);
 
 		versionView = new VersionView(versionModel);
 		versionView.selectVersion(versionModel.getInitialVersion());
 		versionView.addSelectionChangeListener(this);
-		splitPanel.addSouth(versionView, 200);
+		versionsAndParticipants.add(versionView);
+		splitPanel.addSouth(versionsAndParticipants, 200);
 
 		modelModel = new ModelModel();
 		ModelEditorView modelEditor = new ModelEditorView(modelModel);
@@ -150,20 +159,25 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 						logger.log(Level.FINE, "Received: " + message);
 						ChangeInfo changeInfo = null;
 				        try {
-				            SerializationStreamReader reader = pushServiceStreamFactory.createStreamReader(message);
-				            changeInfo = (ChangeInfo) reader.readObject();
-				            Version selectedVersion = versionView.getSelectedVersion();
-				            Version baseVersion = versionModel.getVersionById(changeInfo.getBaseVersion());
-				            boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
-				            Version newVersion = versionModel.addVersion(baseVersion, changeInfo.getChange());
-				            logger.log(Level.FINE,
-				            		"versionModel.getHeads()=" + versionModel.getHeads() 
-				            		+ " selectedVersion= " + selectedVersion
-				            		+ " isOnHead=" + isOnHead);
-				            
-				            if (isOnHead
-				            		&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
-				            	versionView.selectVersion(newVersion);
+				            Object receivedObject = pushServiceStreamFactory.createStreamReader(message).readObject();
+				            if (receivedObject instanceof ChangeInfo) {
+								changeInfo = (ChangeInfo) receivedObject;
+					            Version selectedVersion = versionView.getSelectedVersion();
+					            Version baseVersion = versionModel.getVersionById(changeInfo.getBaseVersion());
+					            boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
+					            Version newVersion = versionModel.addVersion(baseVersion, changeInfo.getChange());
+					            logger.log(Level.FINE,
+					            		"versionModel.getHeads()=" + versionModel.getHeads() 
+					            		+ " selectedVersion= " + selectedVersion
+					            		+ " isOnHead=" + isOnHead);
+					            
+					            if (isOnHead
+					            		&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
+					            	versionView.selectVersion(newVersion);
+					            }
+				            } else if (receivedObject instanceof ParticipantInfo) {
+				            	ParticipantInfo participantInfo = (ParticipantInfo) receivedObject;
+								participantModel.setParticipants(participantInfo.getParticipants());
 				            }
 				          } catch (SerializationException e) {
 				            throw new RuntimeException("Unable to deserialize " + message, e);

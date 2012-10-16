@@ -25,6 +25,6 @@ public class ChannelDisconnectedServlet extends HttpServlet {
 		ChannelService channelService = ChannelServiceFactory.getChannelService();
 		ChannelPresence presence = channelService.parsePresence(req);
 		
-		ParticipantRegistry.getInstance().removeParticipant(presence.clientId());
+		ParticipantRegistry.getInstance().disconnect(presence.clientId());
 	}
 }

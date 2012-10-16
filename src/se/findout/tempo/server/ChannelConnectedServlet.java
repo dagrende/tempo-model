@@ -25,7 +25,7 @@ public class ChannelConnectedServlet extends HttpServlet {
 		ChannelService channelService = ChannelServiceFactory.getChannelService();
 		ChannelPresence presence = channelService.parsePresence(req);
 		
-		ParticipantRegistry.getInstance().addParticipant(presence.clientId());
+		ParticipantRegistry.getInstance().connect(presence.clientId());
 	}
 
 }

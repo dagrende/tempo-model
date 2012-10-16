@@ -11,10 +11,12 @@ import se.findout.tempo.client.model.PropertyChangeListener;
 import com.google.gwt.cell.client.TextCell;
 import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.view.client.ListDataProvider;
 
 public class ParticpantView extends FlowPanel implements PropertyChangeListener {
 	private CellList<String> cellList;
 	private ParticipantModel model;
+	private ListDataProvider<String> listDataProvider;
 
 	public ParticpantView(ParticipantModel model) {
 		this.model = model;
@@ -26,15 +28,16 @@ public class ParticpantView extends FlowPanel implements PropertyChangeListener 
 	private void setRows() {
 		List<String> values = new ArrayList<String>();
 		for (Participant participant : model.getParticipants()) {
-			values.add(participant.getChannelId());
+			values.add(participant.getNickname());
 		}
-		cellList.setRowData(0, values);
-		cellList.setRowCount(values.size());
+		listDataProvider.setList(values);
+		listDataProvider.refresh();
 	}
 
 	private void initUI() {
-		final TextCell textCell = new TextCell();
-	    cellList = new CellList<String>(textCell);
+	    cellList = new CellList<String>(new TextCell());
+	    listDataProvider = new ListDataProvider<String>();
+	    listDataProvider.addDataDisplay(cellList);
 	    add(cellList);
 	}
 

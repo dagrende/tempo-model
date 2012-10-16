@@ -4,11 +4,12 @@ import java.io.Serializable;
 
 public class Participant implements Serializable {
 	private static final long serialVersionUID = 1L;
-	private String userAlias;
+	private String nickname;
 	private String userId;
 	private String channelId;
 	private String docPath;
 	private boolean connected = false;
+	private String email;
 	
 	public Participant() {
 	}
@@ -38,12 +39,12 @@ public class Participant implements Serializable {
 		this.connected = connected;
 	}
 
-	public String getUserAlias() {
-		return userAlias;
+	public String getNickname() {
+		return nickname;
 	}
 
-	public void setUserAlias(String userAlias) {
-		this.userAlias = userAlias;
+	public void setNickname(String nickname) {
+		this.nickname = nickname;
 	}
 
 	public String getUserId() {
@@ -52,5 +53,13 @@ public class Participant implements Serializable {
 
 	public void setUserId(String userId) {
 		this.userId = userId;
+	}
+	
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
 	}
 }

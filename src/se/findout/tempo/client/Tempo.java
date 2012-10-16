@@ -149,9 +149,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 				channel.open(new SocketListener() {
 					@Override
 					public void onOpen() {
-						logger.log(Level.FINE,
-								"Channel opened for token " + loginInfo.getChannelToken());
-
+						logger.log(Level.FINE, "Channel opened for token " + loginInfo.getChannelToken());
 					}
 
 					@Override
@@ -165,18 +163,14 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 					            Version selectedVersion = versionView.getSelectedVersion();
 					            Version baseVersion = versionModel.getVersionById(changeInfo.getBaseVersion());
 					            boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
-					            Version newVersion = versionModel.addVersion(baseVersion, changeInfo.getChange());
-					            logger.log(Level.FINE,
-					            		"versionModel.getHeads()=" + versionModel.getHeads() 
-					            		+ " selectedVersion= " + selectedVersion
-					            		+ " isOnHead=" + isOnHead);
-					            
+					            Version newVersion = versionModel.addVersion(baseVersion, changeInfo.getChange());					            
 					            if (isOnHead
 					            		&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
 					            	versionView.selectVersion(newVersion);
 					            }
 				            } else if (receivedObject instanceof ParticipantInfo) {
 				            	ParticipantInfo participantInfo = (ParticipantInfo) receivedObject;
+				            	logger.log(Level.FINE, "received participantInfo n=" + participantInfo.getParticipants().size());
 								participantModel.setParticipants(participantInfo.getParticipants());
 				            }
 				          } catch (SerializationException e) {

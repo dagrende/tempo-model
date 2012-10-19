@@ -6,7 +6,6 @@ import java.util.logging.Logger;
 
 import se.findout.tempo.client.ParticipantInfo;
 import se.findout.tempo.client.model.Participant;
-import se.findout.tempo.client.model.PropertyChangeEvent;
 import se.findout.tempo.client.model.PropertyChangeListener;
 
 public class ParticipantRegistry {

@@ -4,7 +4,7 @@ package se.findout.tempo.client.model;
  * Describes a version of data that is obtained by applying a change to a base version.
  */
 public class Version {
-	private final String name;
+	private int id = 0;
 	
 	/**
 	 * The origin of this version.
@@ -16,15 +16,11 @@ public class Version {
 	 */
 	private final Command change;
 
-	public Version(String name, Version base, Command change) {
+	public Version(int id, Version base, Command change) {
 		super();
-		this.name = name;
+		this.setId(id);
 		this.base = base;
 		this.change = change;
-	}
-	
-	public String getName() {
-		return name;
 	}
 	
 	public Version getBase() {
@@ -37,14 +33,22 @@ public class Version {
 	
 	@Override
 	public String toString() {
-		return getName();
+		return "" + getId();
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		result = (int) (prime * result + id);
 		return result;
 	}
 
@@ -57,11 +61,10 @@ public class Version {
 		if (getClass() != obj.getClass())
 			return false;
 		Version other = (Version) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
+		if (id != other.id)
 			return false;
 		return true;
 	}
+	
+	
 }

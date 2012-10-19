@@ -9,8 +9,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 public interface ModelRepositoryServiceAsync {
 
-	void addCommand(String channelId, String documentName, String baseVersion,
-			Command command, AsyncCallback<String> callback);
+	void addCommand(String channelId, String documentName, int baseVersion, Command command,
+			AsyncCallback<Integer> callback);
 
 	void getAllChanges(String docPath, AsyncCallback<List<ChangeInfo>> callback);
 

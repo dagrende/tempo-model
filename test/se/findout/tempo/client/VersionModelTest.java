@@ -42,9 +42,9 @@ public class VersionModelTest {
 		Assert.assertEquals(v1, v2.getBase());
 		Assert.assertEquals(v1, v11.getBase());
 		
-		Assert.assertEquals("1", v1.getName());
-		Assert.assertEquals("2", v2.getName());
-		Assert.assertEquals("1.1", v11.getName());
+		Assert.assertEquals(1, v1.getId());
+		Assert.assertEquals(2, v2.getId());
+		Assert.assertEquals(3, v11.getId());
 	}
 	
 	@Test
@@ -106,8 +106,8 @@ public class VersionModelTest {
 		Version v21 = model.addVersion(v2, new LogChange(log, "v21"));
 		Version v22 = model.addVersion(v21, new LogChange(log, "v22"));
 
-		Assert.assertEquals(v1, model.getVersionById("1"));
-		Assert.assertEquals(v22, model.getVersionById("2.2"));
+		Assert.assertEquals(v1, model.getVersionById(1));
+		Assert.assertEquals(v22, model.getVersionById(2));
 	}
 	
 	@Test

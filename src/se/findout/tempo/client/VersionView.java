@@ -51,7 +51,7 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 				drawingArea.add(circle);
 				versionToCircle.put(version, circle);
 				
-				Text text = new Text(0, 0, version.getName());
+				Text text = new Text(0, 0, Long.toString(version.getId()));
 				text.setFillColor("black");
 				text.setFontSize(14);
 				text.setX(40 + x - text.getTextWidth() / 2);

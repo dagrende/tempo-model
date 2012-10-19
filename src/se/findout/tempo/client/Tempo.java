@@ -33,7 +33,6 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamFactory;
-import com.google.gwt.user.client.rpc.SerializationStreamReader;
 import com.google.gwt.user.client.ui.Anchor;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
@@ -165,7 +164,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 					            boolean isOnHead = versionModel.getHeads().contains(selectedVersion);
 					            Version newVersion = versionModel.addVersion(baseVersion, changeInfo.getChange());					            
 					            if (isOnHead
-					            		&& newVersion.getBase().getName().equals(selectedVersion.getName())) {
+					            		&& newVersion.getBase().getId() == selectedVersion.getId()) {
 					            	versionView.selectVersion(newVersion);
 					            }
 				            } else if (receivedObject instanceof ParticipantInfo) {
@@ -213,11 +212,14 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		throw new IllegalArgumentException("json syntax error");
 	}
 
+	/**
+	 * Editor command performed by user.
+	 */
 	@Override
 	public void change(Command change) {
 		Version selectedVersion = versionView.getSelectedVersion();
 		Version addedVersion = versionModel.addVersion(selectedVersion, change);
-		storeChange(docPath, selectedVersion, change);
+		storeChange(docPath, addedVersion);
 		versionView.selectVersion(addedVersion);
 	}
 
@@ -251,16 +253,17 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		modelRepoService.getAllChanges(docPath, callback);
 	}
 
-	private void storeChange(String docPath, Version baseVersion, Command change) {
+	private void storeChange(String docPath, final Version addedVersion) {
 		if (modelRepoService == null) {
 			modelRepoService = GWT.create(ModelRepositoryService.class);
 		}
 
-		AsyncCallback<String> callback = new AsyncCallback<String>() {
+		AsyncCallback<Integer> callback = new AsyncCallback<Integer>() {
 
 			@Override
-			public void onSuccess(String result) {
+			public void onSuccess(Integer result) {
 				logger.log(Level.FINE, "Tempo.storeChange.callback.onSuccess()");
+				addedVersion.setId(result);
 			}
 
 			@Override
@@ -270,8 +273,8 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 			}
 		};
 
-		modelRepoService.addCommand(loginInfo.getChannelId(), docPath, baseVersion.getName(),
-				change, callback);
+		modelRepoService.addCommand(loginInfo.getChannelId(), docPath, addedVersion.getBase().getId(),
+				addedVersion.getChange(), callback);
 	}
 
 	@Override

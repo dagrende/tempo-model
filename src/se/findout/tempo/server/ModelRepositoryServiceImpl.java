@@ -11,15 +11,16 @@ import se.findout.tempo.client.ModelRepositoryService;
 import se.findout.tempo.client.model.ChangeInfo;
 import se.findout.tempo.client.model.Command;
 
-import com.google.appengine.api.channel.ChannelService;
-import com.google.appengine.api.channel.ChannelServiceFactory;
+import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
 import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
+import com.google.appengine.api.datastore.Transaction;
 import com.google.appengine.api.users.User;
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
@@ -33,58 +34,92 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 			.getName());
 	private static final long serialVersionUID = 1L;
 	private Gson gson = new Gson();
+	
+	public ModelRepositoryServiceImpl() {
+		KindDeleter.deleteAllOfKind("Change");
+		KindDeleter.deleteAllOfKind("Document");		
+	}
 
 	@Override
-	public String addCommand(String channelId, String docPath, String versionId, Command command) {
+	public int addCommand(String channelId, String docPath, int baseVersionId, Command command) {
 		logger.log(Level.FINE, "ModelRepositoryServiceImpl.addCommand(" + channelId + ", "
-				+ versionId + ", " + command.getDescription() + ")");
+				+ baseVersionId + ", " + command.getDescription() + ")");
 
 		UserService userService = UserServiceFactory.getUserService();
 		User user = userService.getCurrentUser();
 
-		Key documentKey = getDocumentKeyByName(docPath);
-		if (documentKey == null) {
-			documentKey = createDocument(docPath, user.getNickname());
-		}
-
-		Entity changeEntity = new Entity("Change", documentKey);
-		changeEntity.setProperty("baseVersion", versionId);
-		changeEntity.setProperty("changeType", command.getClass().getName());
 		String json = gson.toJson(command);
-		changeEntity.setProperty("changeData", json);
-		changeEntity.setProperty("createTime", new Date());
-		changeEntity.setProperty("creator", user.getNickname());
-		DatastoreServiceFactory.getDatastoreService().put(changeEntity);
+		DatastoreService dss = DatastoreServiceFactory.getDatastoreService();
+		Transaction tx = dss.beginTransaction();
 
-		sendToParticipants(channelId, versionId, command);
-
-		return versionId;
+		try {
+			Entity document = getDocumentEntityByName(docPath);
+			if (document == null) {
+				document = createDocument(tx, docPath, user.getNickname());
+			}
+			Integer changeId = getPropertyAsInteger(document, "changeId");
+			System.out.println("ModelRepositoryServiceImpl.addCommand() document.changeId=" + changeId);
+			if (changeId == null) {
+				changeId = 1;
+			}
+			changeId++;
+			document.setProperty("changeId", changeId);
+			dss.put(tx, document);
+			
+			Entity changeEntity = new Entity("Change", document.getKey());
+			changeEntity.setProperty("changeId", (Integer)changeId);
+			changeEntity.setProperty("baseVersion", (Integer)baseVersionId);
+			changeEntity.setProperty("changeType", command.getClass().getName());
+			changeEntity.setProperty("changeData", json);
+			changeEntity.setProperty("createTime", new Date());
+			changeEntity.setProperty("creator", user.getNickname());
+			dss.put(tx, changeEntity);
+			tx.commit();
+			sendToParticipants(channelId, baseVersionId, command, changeId);
+			return changeId;
+		} finally {
+			if (tx.isActive()) {
+				tx.rollback();
+			}
+		}
 	}
 
-	private void sendToParticipants(String fromChannelId, String versionId, Command change) {
+	private Integer getPropertyAsInteger(Entity entity, String propertyName) {
+		Object value = entity.getProperty(propertyName);
+		if (value instanceof Integer) {
+			return (Integer)value;
+		} else if (value instanceof Long) {
+			return Integer.valueOf(((Long)value).intValue());
+		} else {
+			throw new IllegalArgumentException("value class " + value.getClass().getName()
+					+ " of property '" + propertyName + "' of entity " + entity + " not convertible to Integer");
+		}
+	}
+
+	private void sendToParticipants(String fromChannelId, int versionId, Command change, int changeId) {
 		for (String channelId : ParticipantRegistry.getInstance().getChannelIds()) {
 			if (!channelId.equals(fromChannelId)) {
-				ChannelService channelService = ChannelServiceFactory.getChannelService();
-				PushServer.sendMessageByKey(channelId, new ChangeInfo(versionId, change));
+				PushServer.sendMessageByKey(channelId, new ChangeInfo(versionId, change, changeId));
 			}
 		}
 	}
 
 	/**
-	 * Returns the key of the unique document having the given name.
+	 * Returns the unique document having the given name.
+	 * 
 	 * 
 	 * @param name
 	 * @return
 	 */
-	private Key getDocumentKeyByName(String name) {
-		List<Entity> docsWithKey = findDocumentsByName(name);
-		if (docsWithKey.size() > 1) {
+	private Entity getDocumentEntityByName(String name) {
+		List<Entity> docs = findDocumentsByName(name);
+		if (docs.size() > 1) {
 			logger.log(Level.WARNING, "Multiple documents with same name: '" + name + "'");
 		}
-		if (docsWithKey.isEmpty()) {
+		if (docs.isEmpty()) {
 			return null;
 		}
-		return docsWithKey.get(0).getKey();
+		return docs.get(0);
 	}
 
 	/**
@@ -100,7 +135,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 			throw new IllegalArgumentException(
 					"folders not implemented yet - use a document name without slashes");
 		}
-		Query query = new Query("Document").setKeysOnly().setFilter(
+		Query query = new Query("Document").setFilter(
 				new FilterPredicate("name", FilterOperator.EQUAL, name));
 		List<Entity> docsWithKey = DatastoreServiceFactory.getDatastoreService().prepare(query)
 				.asList(FetchOptions.Builder.withLimit(2));
@@ -116,12 +151,15 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	 *            will be creator in the new document
 	 * @return the created document key
 	 */
-	private Key createDocument(String docName, String userNickName) {
+	private Entity createDocument(Transaction tx, String docName, String userNickName) {
 		Entity documentEntity = new Entity("Document");
 		documentEntity.setProperty("name", docName);
 		documentEntity.setProperty("createTime", new Date());
 		documentEntity.setProperty("creator", userNickName);
-		return DatastoreServiceFactory.getDatastoreService().put(documentEntity);
+		documentEntity.setProperty("changeId", (Integer)1);
+		DatastoreService dss = DatastoreServiceFactory.getDatastoreService();
+		Key key = dss.put(tx, documentEntity);
+		return documentEntity;
 	}
 
 	/**
@@ -129,30 +167,28 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	 */
 	@Override
 	public List<ChangeInfo> getAllChanges(String docName) {
-		Key documentKey = getDocumentKeyByName(docName);
-		if (documentKey != null) {
-			Query query = new Query("Change").setAncestor(documentKey).addSort("createTime",
+		Entity document = getDocumentEntityByName(docName);
+		if (document != null) {
+			Query query = new Query("Change").setAncestor(document.getKey()).addSort("createTime",
 					Query.SortDirection.ASCENDING);
 			Iterable<Entity> channelEntities = DatastoreServiceFactory.getDatastoreService()
 					.prepare(query).asIterable();
 			List<ChangeInfo> changeInfos = new ArrayList<ChangeInfo>();
 			for (Entity entity : channelEntities) {
-				String versionId = (String) entity.getProperty("baseVersion");
+				int changeId = getPropertyAsInteger(entity, "changeId");
+				int baseVersionId = (int)(long)(Long) entity.getProperty("baseVersion");
 				String changeType = (String) entity.getProperty("changeType");
 				String changeData = (String) entity.getProperty("changeData");
 				try {
-					changeInfos.add(new ChangeInfo(versionId, (Command) gson.fromJson(changeData,
-							Class.forName(changeType))));
+					changeInfos.add(new ChangeInfo(baseVersionId, (Command) gson.fromJson(changeData,
+							Class.forName(changeType)), changeId));
 				} catch (JsonSyntaxException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+					throw new IllegalArgumentException("Invalid json syntax in db kind=" + entity.getKind() + " key=" + entity.getKey(), e);
 				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
+					throw new IllegalArgumentException("Invalid json syntax in db kind=" + entity.getKind() + " key=" + entity.getKey() + " changeType=" + changeType, e);
 				}
-				// changeInfos.add(new ChangeInfo("22.22", new
-				// DeleteCommand("34")));
-
 			}
 
 			return changeInfos;

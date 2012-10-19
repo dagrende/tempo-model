@@ -13,11 +13,21 @@ public class VersionModel {
 	private final List<Version> heads = new ArrayList<Version>();
 	private final List<Version> allVersions = new ArrayList<Version>();
 	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionModel.VersionChangeListener>();
+	private int maxId = 0;
 	
 	public VersionModel() {
-		Version initialVersion = new Version("1", null, null);
+		Version initialVersion = new Version(1, null, null);
+		updateMaxId(initialVersion);
 		getHeads().add(initialVersion);
 		allVersions.add(initialVersion);
+	}
+
+	private void updateMaxId(Version initialVersion) {
+		maxId = Math.max(maxId, initialVersion.getId());
+	}
+	
+	public int getMaxId() {
+		return maxId;
 	}
 
 	public List<Version> getHeads() {
@@ -25,10 +35,11 @@ public class VersionModel {
 	}
 	
 	public Version addVersion(Version base, Command change) {
-		logger.log(Level.FINE, "VersionModel.addVersion('" + base.getName() + "', " + change + ")");
+		logger.log(Level.FINE, "VersionModel.addVersion('" + base.getId() + "', " + change + ")");
 		int i = heads.indexOf(base);
-		String name = i == -1 ? base.getName() + ".1" : incVersion(base.getName());
-		Version newVersion = new Version(name, base, change);
+		maxId++;
+		Version newVersion = new Version(maxId, base, change);
+		
 		if (i == -1) {
 			heads.add(newVersion);	// let new version become a new head (new branch)
 		} else {
@@ -161,9 +172,9 @@ public class VersionModel {
 		void undo(Command change);
 	}
 
-	public Version getVersionById(String id) {
+	public Version getVersionById(int id) {
 		for (Version version : allVersions) {
-			if (version.getName().equals(id)) {
+			if (version.getId() == id) {
 				return version;
 			}
 		}

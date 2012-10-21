@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.findout.tempo.client.model.Participant;
-import se.findout.tempo.client.model.ParticipantModel;
+import se.findout.tempo.client.model.ParticipantsModel;
 import se.findout.tempo.client.model.PropertyChangeEvent;
 import se.findout.tempo.client.model.PropertyChangeListener;
 
@@ -13,12 +13,12 @@ import com.google.gwt.user.cellview.client.CellList;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.view.client.ListDataProvider;
 
-public class ParticpantView extends FlowPanel implements PropertyChangeListener {
+public class ParticpantsView extends FlowPanel implements PropertyChangeListener {
 	private CellList<String> cellList;
-	private ParticipantModel model;
+	private ParticipantsModel model;
 	private ListDataProvider<String> listDataProvider;
 
-	public ParticpantView(ParticipantModel model) {
+	public ParticpantsView(ParticipantsModel model) {
 		this.model = model;
 		initUI();
 	    setRows();

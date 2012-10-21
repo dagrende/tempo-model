@@ -10,16 +10,16 @@ import org.junit.Test;
 
 import se.findout.tempo.client.model.NUllChange;
 import se.findout.tempo.client.model.Version;
-import se.findout.tempo.client.model.VersionModel;
+import se.findout.tempo.client.model.VersionTreeModel;
 
 public class VersionTreeRendererTest {
-	private VersionModel model;
+	private VersionTreeModel model;
 	private VersionTreeRenderer versionTreeRenderer;
 	private List<VersionNode> nodes;
 
 	@Before
 	public void setup() {
-		model = new VersionModel();
+		model = new VersionTreeModel();
 		versionTreeRenderer = new VersionTreeRenderer(model, new VersionTreeRenderer.ShapeFactory() {
 			@Override
 			public void addVersion(Version version, int x, int y) {

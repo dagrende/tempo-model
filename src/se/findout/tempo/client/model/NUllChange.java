@@ -2,7 +2,7 @@ package se.findout.tempo.client.model;
 
 
 /**
- * Change that doesn't change anything.
+ * A change command that doesn't change anything.
  * @author dag
  *
  */

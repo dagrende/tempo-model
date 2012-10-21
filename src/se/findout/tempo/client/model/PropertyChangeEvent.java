@@ -1,5 +1,8 @@
 package se.findout.tempo.client.model;
 
+/**
+ * Corresponds to the same java beans object, but compatible with GWT.
+ */
 public class PropertyChangeEvent {
     /**
      * name of the property that changed.  May be null, if not known.

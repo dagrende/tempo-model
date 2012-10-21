@@ -1,9 +1,8 @@
-package se.findout.tempo.client;
+package se.findout.tempo.client.model;
 
 import java.io.Serializable;
 import java.util.List;
 
-import se.findout.tempo.client.model.Participant;
 
 public class ParticipantInfo implements Serializable {
 	private static final long serialVersionUID = 1L;

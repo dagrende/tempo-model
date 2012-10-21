@@ -8,14 +8,17 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class VersionModel {
-    private final static Logger logger = Logger.getLogger(VersionModel.class.getName());
+/**
+ * Represents the version tree of a model.
+ */
+public class VersionTreeModel {
+    private final static Logger logger = Logger.getLogger(VersionTreeModel.class.getName());
 	private final List<Version> heads = new ArrayList<Version>();
 	private final List<Version> allVersions = new ArrayList<Version>();
-	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionModel.VersionChangeListener>();
+	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionTreeModel.VersionChangeListener>();
 	private int maxId = 0;
 	
-	public VersionModel() {
+	public VersionTreeModel() {
 		Version initialVersion = new Version(1, null, null);
 		updateMaxId(initialVersion);
 		getHeads().add(initialVersion);
@@ -77,18 +80,18 @@ public class VersionModel {
 	}
 
 	public static class VersionChangeEvent {
-		private final VersionModel model;
+		private final VersionTreeModel model;
 		private final Version newVersion;
 		private final boolean isNewBranch;
 
-		public VersionChangeEvent(VersionModel model, Version newVersion,
+		public VersionChangeEvent(VersionTreeModel model, Version newVersion,
 				boolean isNewBranch) {
 			this.model = model;
 			this.newVersion = newVersion;
 			this.isNewBranch = isNewBranch;
 		}
 
-		public VersionModel getModel() {
+		public VersionTreeModel getModel() {
 			return model;
 		}
 
@@ -135,7 +138,7 @@ public class VersionModel {
 	 * @param from the current version
 	 * @param to the version we want
 	 */
-	public void switchVersion(Version from, Version to, ChangeIterator changeIterator) {
+	public void switchVersion(Version from, Version to, ChangeVisitor changeIterator) {
 		logger.log(Level.FINE, "VersionModel.switchVersion(" + from + ", " + to + ")");
 		Set<Version> undoVersions = new HashSet<Version>();
 		Version v = from;
@@ -167,7 +170,7 @@ public class VersionModel {
 		}
 	}
 	
-	public interface ChangeIterator {
+	public interface ChangeVisitor {
 		void execute(Command change);
 		void undo(Command change);
 	}

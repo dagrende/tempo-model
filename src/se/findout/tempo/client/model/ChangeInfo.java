@@ -2,6 +2,9 @@ package se.findout.tempo.client.model;
 
 import java.io.Serializable;
 
+/**
+ * Value object describing a change, to store in database or transferring through a channel.
+ */
 public class ChangeInfo implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private int baseVersion;

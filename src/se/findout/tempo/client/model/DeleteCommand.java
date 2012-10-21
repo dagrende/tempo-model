@@ -4,6 +4,9 @@ import java.io.Serializable;
 
 import se.findout.tempo.client.model.ModelModel.Box;
 
+/**
+ * A comand deleting the model object with the specified id.
+ */
 public class DeleteCommand implements Command, Serializable {
 	private static final long serialVersionUID = 1L;
 	/**

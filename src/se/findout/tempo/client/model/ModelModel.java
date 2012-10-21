@@ -11,9 +11,6 @@ import java.util.logging.Logger;
 /**
  * Represents a model consisting of Box objects. Each box have id, position and size.
  * Add a ModelChangeListener to get informed of added and deleted boxes.
- * 
- * @author dag
- *
  */
 public class ModelModel {
     private final static Logger logger = Logger.getLogger(ModelModel.class.getName());

@@ -93,6 +93,7 @@ public class PushServer {
 	 * {@link RPC#encodeResponse(Class, Object, boolean, int, com.google.gwt.user.server.rpc.SerializationPolicy)}
 	 * , but it is unfortunately private.
 	 */
+	@SuppressWarnings("unused")
 	private Object dummyMethod() {
 		throw new UnsupportedOperationException("This should never be called.");
 	}

@@ -1,7 +1,7 @@
 package se.findout.tempo.client.model;
 
 /*
- * Describes a version of data that is obtained by applying a change to a base version.
+ * Describes a version of a model, obtained by applying a change to a base version.
  */
 public class Version {
 	private int id = 0;

@@ -15,6 +15,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 
 public class LoginServiceImpl extends RemoteServiceServlet implements
 		LoginService {
+	private static final long serialVersionUID = 1L;
 	private static SimpleDateFormat channelIdTimeFormat = new SimpleDateFormat("HHmmss");
 
 	public LoginInfo login(String requestUri) {

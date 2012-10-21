@@ -6,7 +6,9 @@ import java.util.logging.Logger;
 
 import se.findout.tempo.client.model.ModelModel.Box;
 
-
+/**
+ * A change for creating a rectangle object with specified position and size, in the model.
+ */
 public class CreateRectangleCommand implements Command, Serializable {
     private final static Logger logger = Logger.getLogger(CreateRectangleCommand.class.getName());
     private static final long serialVersionUID = 1L;

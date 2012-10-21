@@ -14,9 +14,7 @@ import se.findout.tempo.client.model.Command;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
@@ -158,7 +156,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		documentEntity.setProperty("creator", userNickName);
 		documentEntity.setProperty("changeId", (Integer)1);
 		DatastoreService dss = DatastoreServiceFactory.getDatastoreService();
-		Key key = dss.put(tx, documentEntity);
+		dss.put(tx, documentEntity);
 		return documentEntity;
 	}
 

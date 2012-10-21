@@ -2,6 +2,9 @@ package se.findout.tempo.client.model;
 
 import java.io.Serializable;
 
+/**
+ * A user participating in the editing of a model document.
+ */
 public class Participant implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String nickname;

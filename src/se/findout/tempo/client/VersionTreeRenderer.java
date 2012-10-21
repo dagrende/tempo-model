@@ -4,11 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import se.findout.tempo.client.model.Version;
-import se.findout.tempo.client.model.VersionModel;
+import se.findout.tempo.client.model.VersionTreeModel;
 
 
 public class VersionTreeRenderer {
-	private VersionModel model;
+	private VersionTreeModel model;
 	private ShapeFactory shapeFactory;
 	private int xScale = 30;
 	private int yScale = 30;
@@ -36,7 +36,7 @@ public class VersionTreeRenderer {
 		}
 	}
 	
-	public VersionTreeRenderer(VersionModel model, ShapeFactory shapeFactory) {
+	public VersionTreeRenderer(VersionTreeModel model, ShapeFactory shapeFactory) {
 		super();
 		this.model = model;
 		this.shapeFactory = shapeFactory;

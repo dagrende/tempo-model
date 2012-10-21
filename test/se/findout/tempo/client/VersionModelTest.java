@@ -8,14 +8,14 @@ import se.findout.tempo.client.model.Command;
 import se.findout.tempo.client.model.ModelModel;
 import se.findout.tempo.client.model.NUllChange;
 import se.findout.tempo.client.model.Version;
-import se.findout.tempo.client.model.VersionModel;
+import se.findout.tempo.client.model.VersionTreeModel;
 
 public class VersionModelTest {
-	private VersionModel model;
+	private VersionTreeModel model;
 
 	@Before
 	public void setup() {
-		model = new VersionModel();
+		model = new VersionTreeModel();
 	}
 	
 	@Test
@@ -123,7 +123,7 @@ public class VersionModelTest {
 		Assert.assertEquals("uv3 ev21 ev22 ", log.toString());
 	}
 	
-	VersionModel.ChangeIterator changeIterator = new VersionModel.ChangeIterator() {
+	VersionTreeModel.ChangeVisitor changeIterator = new VersionTreeModel.ChangeVisitor() {
 		
 		@Override
 		public void undo(Command change) {

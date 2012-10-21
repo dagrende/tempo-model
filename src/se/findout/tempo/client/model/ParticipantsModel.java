@@ -3,8 +3,10 @@ package se.findout.tempo.client.model;
 import java.util.ArrayList;
 import java.util.List;
 
-
-public class ParticipantModel {
+/**
+ * Represents the participants displayed in a client.
+ */
+public class ParticipantsModel {
 	List<Participant> participants = new ArrayList<Participant>();
 	List<Participant> oldParticipants = new ArrayList<Participant>();
 		

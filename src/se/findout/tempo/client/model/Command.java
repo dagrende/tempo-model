@@ -3,7 +3,7 @@ package se.findout.tempo.client.model;
 import java.io.Serializable;
 
 /**
- * Describes the change from one version to another.
+ * Describes the change of a Model from one version to another.
  * @author dag
  */
 public interface Command extends Serializable {

@@ -13,17 +13,17 @@ import org.vaadin.gwtgraphics.client.shape.Circle;
 import org.vaadin.gwtgraphics.client.shape.Text;
 
 import se.findout.tempo.client.model.Version;
-import se.findout.tempo.client.model.VersionModel;
-import se.findout.tempo.client.model.VersionModel.VersionChangeEvent;
-import se.findout.tempo.client.model.VersionModel.VersionChangeListener;
+import se.findout.tempo.client.model.VersionTreeModel;
+import se.findout.tempo.client.model.VersionTreeModel.VersionChangeEvent;
+import se.findout.tempo.client.model.VersionTreeModel.VersionChangeListener;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 
-public class VersionView extends FlowPanel implements VersionChangeListener {
-    private final static Logger logger = Logger.getLogger(VersionView.class.getName());
+public class VersionTreeView extends FlowPanel implements VersionChangeListener {
+    private final static Logger logger = Logger.getLogger(VersionTreeView.class.getName());
 	private DrawingArea drawingArea;
 	private VersionTreeRenderer versionTreeRenderer;
 	private Map<Version, Circle> versionToCircle = new HashMap<Version, Circle>();
@@ -31,14 +31,14 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 	private Circle selectedVersionCircle;
 	private List<SelectionChangeListener> selectionChangeListeners = new ArrayList<SelectionChangeListener>();
 
-	public VersionView(VersionModel versionModel) {
+	public VersionTreeView(VersionTreeModel versionTreeModel) {
 		drawingArea = new DrawingArea(2000, 1000);
 		drawingArea.getElement().getStyle()
 				.setProperty("border", "3px solid #e7e7e7");
 		add(new ScrollPanel(drawingArea));
 		
 		
-		versionTreeRenderer = new VersionTreeRenderer(versionModel, new VersionTreeRenderer.ShapeFactory() {
+		versionTreeRenderer = new VersionTreeRenderer(versionTreeModel, new VersionTreeRenderer.ShapeFactory() {
 			
 			@Override
 			public void addVersion(Version version, int x, int y) {
@@ -72,7 +72,7 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 		
 		versionTreeRenderer.render();
 		
-		versionModel.addVersionChangeListener(this);
+		versionTreeModel.addVersionChangeListener(this);
 		
 	}
 
@@ -138,19 +138,19 @@ public class VersionView extends FlowPanel implements VersionChangeListener {
 	}
 
 	public class SelectionChangedEvent {
-		private final VersionView versionView;
+		private final VersionTreeView versionTreeView;
 		private final Version prevSelectedVersion;
 		private final Version newSelectedVersion;
 
-		public SelectionChangedEvent(VersionView versionView,
+		public SelectionChangedEvent(VersionTreeView versionTreeView,
 				Version prevSelectedVersion, Version newSelectedVersion) {
-					this.versionView = versionView;
+					this.versionTreeView = versionTreeView;
 					this.prevSelectedVersion = prevSelectedVersion;
 					this.newSelectedVersion = newSelectedVersion;
 		}
 
-		public VersionView getVersionsView() {
-			return versionView;
+		public VersionTreeView getVersionsView() {
+			return versionTreeView;
 		}
 
 		public Version getPrevSelectedVersion() {

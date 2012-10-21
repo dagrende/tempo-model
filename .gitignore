@@ -1,4 +1,8 @@
 /test-classes
 /gwt-unitCache
 /.gwt
+*.class
+*.jar
+*.war
+*.ear
 

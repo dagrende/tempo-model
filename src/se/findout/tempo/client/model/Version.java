@@ -33,7 +33,7 @@ public class Version {
 	
 	@Override
 	public String toString() {
-		return "" + getId();
+		return super.toString() + " " + getId();
 	}
 
 	public int getId() {

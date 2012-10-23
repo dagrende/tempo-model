@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.vaadin.gwtgraphics.client.DrawingArea;
 import org.vaadin.gwtgraphics.client.Line;
@@ -23,7 +21,7 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.ScrollPanel;
 
 public class VersionTreeView extends FlowPanel implements VersionChangeListener {
-    private final static Logger logger = Logger.getLogger(VersionTreeView.class.getName());
+//    private final static Logger logger = Logger.getLogger(VersionTreeView.class.getName());
 	private DrawingArea drawingArea;
 	private VersionTreeRenderer versionTreeRenderer;
 	private Map<Version, Circle> versionToCircle = new HashMap<Version, Circle>();
@@ -98,7 +96,7 @@ public class VersionTreeView extends FlowPanel implements VersionChangeListener 
 	}
 	
 	public void selectVersion(Version version) {
-		logger.log(Level.FINE, "VersionView.selectVersion(" + version + ")");
+//		logger.log(Level.FINE, "VersionView.selectVersion(" + version + ")");
 		if (version != selectedVersion) {
 			if (version == null) {
 				showSelection(version);

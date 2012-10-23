@@ -21,7 +21,6 @@ public class ChannelConnectedServlet extends HttpServlet {
 	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
 			throws ServletException, IOException {
 		logger.log(Level.FINE, "");
-		System.out.println("ChannelConnectedServlet.doPost()");
 		ChannelService channelService = ChannelServiceFactory.getChannelService();
 		ChannelPresence presence = channelService.parsePresence(req);
 		

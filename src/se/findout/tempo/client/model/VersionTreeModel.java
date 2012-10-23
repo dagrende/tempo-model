@@ -38,7 +38,7 @@ public class VersionTreeModel {
 	}
 	
 	public Version addVersion(Version base, Command change) {
-		logger.log(Level.FINE, "VersionModel.addVersion('" + base.getId() + "', " + change + ")");
+//		logger.log(Level.FINE, "VersionModel.addVersion('" + base.getId() + "', " + change + ")");
 		int i = heads.indexOf(base);
 		maxId++;
 		Version newVersion = new Version(maxId, base, change);

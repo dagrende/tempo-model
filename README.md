@@ -1,5 +1,4 @@
-Tempo-Model - Collaborative Temporal Model Editing
-===========
+# Tempo-Model - Collaborative Temporal Model Editing
 
 Experiments with collaborative modeling.
 
@@ -11,10 +10,10 @@ Experiments with collaborative modeling.
 1. Add missing jar files, by using `New > Google > Web Application Project` and copying all files from its `war/WEB-INF/lib` into `tempo-model/war/WEB-INF/lib`
 1. Compile GWT code with `Google > GWT Compile`
 1. Start the web app by right clicking the project and select `Run As > Web Application`
-1. Double click on the link that is visible in the Console view: [http://127.0.0.1:8888/Tempo.html?gwt.codesvr=127.0.0.1:9997](http://127.0.0.1:8888/Tempo.html?gwt.codesvr=127.0.0.1:9997)
+1. Double click on the link that is visible in the Console view: <http://127.0.0.1:8888/Tempo.html?gwt.codesvr=127.0.0.1:9997>
 1. Click Login and choose any id (doesn't have to be a valid google id in the test server)
-1. After login the URL [http://127.0.0.1:8888](http://127.0.0.1:8888) is opened, displaying the model editor
-1. When developing the code, navigate to the [http://127.0.0.1:8888/Tempo.html?gwt.codesvr=127.0.0.1:9997](http://127.0.0.1:8888/Tempo.html?gwt.codesvr=127.0.0.1:9997) after login, to not have to GWT Compile for each change.
+1. After login the URL <http://127.0.0.1:8888> is opened, displaying the model editor
+1. When developing the code, navigate to the <http://127.0.0.1:8888/Tempo.html?gwt.codesvr=127.0.0.1:9997> after login, to not have to GWT Compile for each change.
 
 ## Demo
 

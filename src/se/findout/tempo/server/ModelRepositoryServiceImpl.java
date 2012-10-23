@@ -56,7 +56,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 				document = createDocument(tx, docPath, user.getNickname());
 			}
 			Integer changeId = getPropertyAsInteger(document, "changeId");
-			System.out.println("ModelRepositoryServiceImpl.addCommand() document.changeId=" + changeId);
+			logger.log(Level.FINE, "document.changeId=" + changeId);
 			if (changeId == null) {
 				changeId = 1;
 			}
@@ -73,6 +73,8 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 			changeEntity.setProperty("creator", user.getNickname());
 			dss.put(tx, changeEntity);
 			tx.commit();
+			logger.log(Level.FINE, "committed changeId=" + changeId);
+			
 			sendToParticipants(channelId, baseVersionId, command, changeId);
 			return changeId;
 		} finally {

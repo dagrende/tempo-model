@@ -151,61 +151,63 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	private void setupChannel() {
 		pushServiceStreamFactory = (SerializationStreamFactory) GWT.create(PushService.class);
 
-		ChannelFactory.createChannel(loginInfo.getChannelToken(), new ChannelCreatedCallback() {
-			@Override
-			public void onChannelCreated(Channel channel) {
-				channel.open(new SocketListener() {
-					@Override
-					public void onOpen() {
-						logger.log(Level.FINE,
-								"Channel opened for token " + loginInfo.getChannelToken());
-					}
+		ChannelFactory.createChannel(loginInfo.getChannelToken(), new ChannelMessageReceiver());
+	}
 
-					@Override
-					public void onMessage(String message) {
-						logger.log(Level.FINE, "Received: " + message);
-						ChangeInfo changeInfo = null;
-						try {
-							Object receivedObject = pushServiceStreamFactory.createStreamReader(
-									message).readObject();
-							if (receivedObject instanceof ChangeInfo) {
-								// received a change from another user editing this model
-								changeInfo = (ChangeInfo) receivedObject;
-								Version selectedVersion = versionTreeView.getSelectedVersion();
-								Version baseVersion = versionTreeModel.getVersionById(changeInfo
-										.getBaseVersion());
-								boolean isOnHead = versionTreeModel.getHeads()
-										.contains(selectedVersion);
-								Version newVersion = versionTreeModel.addVersion(baseVersion,
-										changeInfo.getChange());
-								if (isOnHead
-										&& newVersion.getBase().getId() == selectedVersion.getId()) {
-									versionTreeView.selectVersion(newVersion);
-								}
-							} else if (receivedObject instanceof ParticipantInfo) {
-								// received a new changed participants list
-								ParticipantInfo participantInfo = (ParticipantInfo) receivedObject;
-								logger.log(Level.FINE, "received participantInfo n="
-										+ participantInfo.getParticipants().size());
-								participantsModel.setParticipants(participantInfo.getParticipants());
+	private final class ChannelMessageReceiver implements ChannelCreatedCallback {
+		@Override
+		public void onChannelCreated(Channel channel) {
+			channel.open(new SocketListener() {
+				@Override
+				public void onOpen() {
+					logger.log(Level.FINE,
+							"Channel opened for token " + loginInfo.getChannelToken());
+				}
+
+				@Override
+				public void onMessage(String message) {
+					logger.log(Level.FINE, "Received: " + message);
+					ChangeInfo changeInfo = null;
+					try {
+						Object receivedObject = pushServiceStreamFactory.createStreamReader(
+								message).readObject();
+						if (receivedObject instanceof ChangeInfo) {
+							// received a model change from another user editing this model
+							changeInfo = (ChangeInfo) receivedObject;
+							Version selectedVersion = versionTreeView.getSelectedVersion();
+							Version baseVersion = versionTreeModel.getVersionById(changeInfo
+									.getBaseVersion());
+							boolean isOnHead = versionTreeModel.getHeads()
+									.contains(selectedVersion);
+							Version newVersion = versionTreeModel.addVersion(baseVersion,
+									changeInfo.getChange());
+							if (isOnHead
+									&& newVersion.getBase().getId() == selectedVersion.getId()) {
+								versionTreeView.selectVersion(newVersion);
 							}
-						} catch (SerializationException e) {
-							throw new RuntimeException("Unable to deserialize " + message, e);
+						} else if (receivedObject instanceof ParticipantInfo) {
+							// received a new changed participants list
+							ParticipantInfo participantInfo = (ParticipantInfo) receivedObject;
+							logger.log(Level.FINE, "received participantInfo n="
+									+ participantInfo.getParticipants().size());
+							participantsModel.setParticipants(participantInfo.getParticipants());
 						}
+					} catch (SerializationException e) {
+						throw new RuntimeException("Unable to deserialize " + message, e);
 					}
+				}
 
-					@Override
-					public void onError(SocketError error) {
-						logger.log(Level.FINE, "Error: " + error.getDescription());
-					}
+				@Override
+				public void onError(SocketError error) {
+					logger.log(Level.FINE, "Error: " + error.getDescription());
+				}
 
-					@Override
-					public void onClose() {
-						logger.log(Level.FINE, "Channel closed!");
-					}
-				});
-			}
-		});
+				@Override
+				public void onClose() {
+					logger.log(Level.FINE, "Channel closed!");
+				}
+			});
+		}
 	}
 
 	/**
@@ -214,9 +216,35 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	@Override
 	public void change(Command change) {
 		Version selectedVersion = versionTreeView.getSelectedVersion();
+		logger.log(Level.FINE, "edchange 1 selectedVersion=" + selectedVersion); 
 		Version newVersion = versionTreeModel.addVersion(selectedVersion, change);
+		logger.log(Level.FINE, "edchange 2 newVersion=" + newVersion);
 		storeChange(modelPath, newVersion);
+		logger.log(Level.FINE, "edchange 3 newVersion=" + newVersion);
 		versionTreeView.selectVersion(newVersion);
+	}
+
+	/**
+	 * User have selected another version in the version tree view.
+	 */
+	@Override
+	public void selectionChanged(SelectionChangedEvent event) {
+		/**
+		 * Guide a visitor from the current version in the tree, to the new one, and let him undo and execute himself through the changes.
+		 */
+		versionTreeModel.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion(),
+				new VersionTreeModel.ChangeVisitor() {
+
+					@Override
+					public void undo(Command change) {
+						change.undo(modelModel);
+					}
+
+					@Override
+					public void execute(Command change) {
+						change.execute(modelModel);
+					}
+				});
 	}
 
 	/**
@@ -233,9 +261,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 
 			@Override
 			public void onSuccess(List<ChangeInfo> result) {
-				System.out
-						.println("Tempo.retrieveAllChanges().new AsyncCallback() {...}.onSuccess("
-								+ result + ")");
+				logger.log(Level.FINE, "");
 				for (ChangeInfo changeInfo : result) {
 					versionTreeModel.addVersion(
 							versionTreeModel.getVersionById(changeInfo.getBaseVersion()),
@@ -248,8 +274,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 
 			@Override
 			public void onFailure(Throwable caught) {
-				System.out.println("Tempo.storeChange(...).new AsyncCallback() {...}.onFailure()");
-				GWT.log("failed", caught);
+				logger.log(Level.FINE, "");
 			}
 		};
 
@@ -269,15 +294,14 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		AsyncCallback<Integer> callback = new AsyncCallback<Integer>() {
 
 			@Override
-			public void onSuccess(Integer result) {
-				logger.log(Level.FINE, "Tempo.storeChange.callback.onSuccess()");
-				addedVersion.setId(result);
+			public void onSuccess(Integer storedVersionId) {
+				logger.log(Level.FINE, "addedVersion=" + addedVersion + " setId(" + storedVersionId + ")");
+				addedVersion.setId(storedVersionId);
 			}
 
 			@Override
 			public void onFailure(Throwable caught) {
-				logger.log(Level.FINE, "Tempo.storeChange.callback.onFailure()");
-				GWT.log("failed", caught);
+				logger.log(Level.FINE, "");
 			}
 		};
 
@@ -285,28 +309,4 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 				.getId(), addedVersion.getChange(), callback);
 	}
 
-	/**
-	 * User have selected another version in the version tree view.
-	 */
-	@Override
-	public void selectionChanged(SelectionChangedEvent event) {
-		/**
-		 * Guide a visitor from the current version in the tree, to the new one, and let him undo and execute himself through the changes.
-		 */
-		versionTreeModel.switchVersion(event.getPrevSelectedVersion(), event.getNewSelectedVersion(),
-				new VersionTreeModel.ChangeVisitor() {
-
-					@Override
-					public void undo(Command change) {
-						logger.log(Level.FINE, "undo(" + change.getDescription() + ")");
-						change.undo(modelModel);
-					}
-
-					@Override
-					public void execute(Command change) {
-						logger.log(Level.FINE, "execute(" + change.getDescription() + ")");
-						change.execute(modelModel);
-					}
-				});
-	}
 }

@@ -15,6 +15,7 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
@@ -50,12 +51,14 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		DatastoreService dss = DatastoreServiceFactory.getDatastoreService();
 		Transaction tx = dss.beginTransaction();
 
+		Integer changeId;
+		Entity document;
 		try {
-			Entity document = getDocumentEntityByName(docPath);
+			document = getDocumentEntityByName(tx, docPath);
 			if (document == null) {
 				document = createDocument(tx, docPath, user.getNickname());
 			}
-			Integer changeId = getPropertyAsInteger(document, "changeId");
+			changeId = getPropertyAsInteger(document, "changeId");
 			logger.log(Level.FINE, "document.changeId=" + changeId);
 			if (changeId == null) {
 				changeId = 1;
@@ -63,25 +66,25 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 			changeId++;
 			document.setProperty("changeId", changeId);
 			dss.put(tx, document);
-			
-			Entity changeEntity = new Entity("Change", document.getKey());
-			changeEntity.setProperty("changeId", (Integer)changeId);
-			changeEntity.setProperty("baseVersion", (Integer)baseVersionId);
-			changeEntity.setProperty("changeType", command.getClass().getName());
-			changeEntity.setProperty("changeData", json);
-			changeEntity.setProperty("createTime", new Date());
-			changeEntity.setProperty("creator", user.getNickname());
-			dss.put(tx, changeEntity);
 			tx.commit();
-			logger.log(Level.FINE, "committed changeId=" + changeId);
-			
-			sendToParticipants(channelId, baseVersionId, command, changeId);
-			return changeId;
 		} finally {
 			if (tx.isActive()) {
 				tx.rollback();
 			}
 		}
+		
+		Entity changeEntity = new Entity("Change", document.getKey());
+		changeEntity.setProperty("changeId", (Integer)changeId);
+		changeEntity.setProperty("baseVersion", (Integer)baseVersionId);
+		changeEntity.setProperty("changeType", command.getClass().getName());
+		changeEntity.setProperty("changeData", json);
+		changeEntity.setProperty("createTime", new Date());
+		changeEntity.setProperty("creator", user.getNickname());
+		dss.put(changeEntity);
+		logger.log(Level.FINE, "committed changeId=" + changeId);
+		
+		sendToParticipants(channelId, baseVersionId, command, changeId);
+		return changeId;
 	}
 
 	private Integer getPropertyAsInteger(Entity entity, String propertyName) {
@@ -106,13 +109,14 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 
 	/**
 	 * Returns the unique document having the given name.
+	 * @param tx 
 	 * 
 	 * 
 	 * @param name
 	 * @return
 	 */
-	private Entity getDocumentEntityByName(String name) {
-		List<Entity> docs = findDocumentsByName(name);
+	private Entity getDocumentEntityByName(Transaction tx, String name) {
+		List<Entity> docs = findDocumentsByName(tx, name);
 		if (docs.size() > 1) {
 			logger.log(Level.WARNING, "Multiple documents with same name: '" + name + "'");
 		}
@@ -125,11 +129,12 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	/**
 	 * Searches for Documents with the given name and returns maximum two of
 	 * them.
+	 * @param tx 
 	 * 
 	 * @param name
 	 * @return
 	 */
-	private List<Entity> findDocumentsByName(String name) {
+	private List<Entity> findDocumentsByName(Transaction tx, String name) {
 		int slashPos = name.indexOf("/");
 		if (slashPos != -1) {
 			throw new IllegalArgumentException(
@@ -137,8 +142,9 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		}
 		Query query = new Query("Document").setFilter(
 				new FilterPredicate("name", FilterOperator.EQUAL, name));
-		List<Entity> docsWithKey = DatastoreServiceFactory.getDatastoreService().prepare(query)
-				.asList(FetchOptions.Builder.withLimit(2));
+		DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
+		PreparedQuery preparedQuery = tx != null ? datastoreService.prepare(tx, query) : datastoreService.prepare(query);
+		List<Entity> docsWithKey = preparedQuery.asList(FetchOptions.Builder.withLimit(2));
 		return docsWithKey;
 	}
 
@@ -167,7 +173,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	 */
 	@Override
 	public List<ChangeInfo> getAllChanges(String docName) {
-		Entity document = getDocumentEntityByName(docName);
+		Entity document = getDocumentEntityByName(null, docName);
 		if (document != null) {
 			Query query = new Query("Change").setAncestor(document.getKey()).addSort("createTime",
 					Query.SortDirection.ASCENDING);

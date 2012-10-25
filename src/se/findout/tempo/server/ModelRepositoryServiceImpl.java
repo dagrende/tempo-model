@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 import se.findout.tempo.client.ModelRepositoryService;
 import se.findout.tempo.client.model.ChangeInfo;
 import se.findout.tempo.client.model.Command;
+import se.findout.tempo.client.model.Participant;
 
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
@@ -43,6 +44,9 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 
 	@Override
 	public int addCommand(String channelId, String docPath, int baseVersionId, Command command) {
+		List<Participant> participants = ParticipantRegistry.getInstance().getParticipants();
+		logger.log(Level.FINE, "" + participants.size() + " participants=" + participants);
+		
 		logger.log(Level.FINE, "ModelRepositoryServiceImpl.addCommand(" + channelId + ", "
 				+ baseVersionId + ", " + command.getDescription() + ")");
 
@@ -198,6 +202,9 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	 */
 	@Override
 	public List<ChangeInfo> getAllChanges(String docName) {
+		List<Participant> participants = ParticipantRegistry.getInstance().getParticipants();
+		logger.log(Level.FINE, "" + participants.size() + " participants=" + participants);
+
 		Entity document = getDocumentEntityByName(docName);
 		if (document != null) {
 			Query query = new Query("Change").setAncestor(document.getKey()).addSort("createTime",

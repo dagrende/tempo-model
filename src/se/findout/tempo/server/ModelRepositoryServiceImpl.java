@@ -2,6 +2,7 @@ package se.findout.tempo.server;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
@@ -14,8 +15,9 @@ import se.findout.tempo.client.model.Command;
 import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
+import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.PreparedQuery;
+import com.google.appengine.api.datastore.Key;
 import com.google.appengine.api.datastore.Query;
 import com.google.appengine.api.datastore.Query.FilterOperator;
 import com.google.appengine.api.datastore.Query.FilterPredicate;
@@ -49,31 +51,20 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 
 		String json = gson.toJson(command);
 		DatastoreService dss = DatastoreServiceFactory.getDatastoreService();
-		Transaction tx = dss.beginTransaction();
+		Entity document = getDocumentEntityByName(docPath);
+		if (document == null) {
+			document = createDocument(null, docPath, user.getNickname());
+		}
 
+		Key documentKey = document.getKey();
 		Integer changeId;
-		Entity document;
 		try {
-			document = getDocumentEntityByName(tx, docPath);
-			if (document == null) {
-				document = createDocument(tx, docPath, user.getNickname());
-			}
-			changeId = getPropertyAsInteger(document, "changeId");
-			logger.log(Level.FINE, "document.changeId=" + changeId);
-			if (changeId == null) {
-				changeId = 1;
-			}
-			changeId++;
-			document.setProperty("changeId", changeId);
-			dss.put(tx, document);
-			tx.commit();
-		} finally {
-			if (tx.isActive()) {
-				tx.rollback();
-			}
+			changeId = incrementChangeId(dss, "changeId", documentKey);
+		} catch (EntityNotFoundException e) {
+			throw new Error("Internal error: newly read or created entity not found", e);
 		}
 		
-		Entity changeEntity = new Entity("Change", document.getKey());
+		Entity changeEntity = new Entity("Change", documentKey);
 		changeEntity.setProperty("changeId", (Integer)changeId);
 		changeEntity.setProperty("baseVersion", (Integer)baseVersionId);
 		changeEntity.setProperty("changeType", command.getClass().getName());
@@ -85,6 +76,39 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		
 		sendToParticipants(channelId, baseVersionId, command, changeId);
 		return changeId;
+	}
+
+	/**
+	 * Increment property of the entity for the key, in a transaction to guarantee unique consecutive numbers.
+	 * @param dss datastore
+	 * @param key entity key
+	 * @return
+	 * @throws EntityNotFoundException 
+	 */
+	private Integer incrementChangeId(DatastoreService dss, String propertyName, Key key) throws EntityNotFoundException {
+		Integer changeId = null;
+		int retries = 3;
+		while (true) {
+			Transaction tx = dss.beginTransaction();
+			try {
+				Entity entity = dss.get(key);
+				changeId = getPropertyAsInteger(entity, propertyName);
+				changeId++;
+				entity.setProperty(propertyName, changeId);
+				dss.put(tx, entity);
+				tx.commit();
+				return changeId;
+		    } catch (ConcurrentModificationException e) {
+		        if (retries == 0) {
+		            throw new Error("Could not increment " + key.getKind() + "." + propertyName, e);
+		        }
+		        --retries;
+			} finally {
+				if (tx.isActive()) {
+					tx.rollback();
+				}
+			}
+		}
 	}
 
 	private Integer getPropertyAsInteger(Entity entity, String propertyName) {
@@ -109,14 +133,13 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 
 	/**
 	 * Returns the unique document having the given name.
-	 * @param tx 
 	 * 
 	 * 
 	 * @param name
 	 * @return
 	 */
-	private Entity getDocumentEntityByName(Transaction tx, String name) {
-		List<Entity> docs = findDocumentsByName(tx, name);
+	private Entity getDocumentEntityByName(String name) {
+		List<Entity> docs = findDocumentsByName(name);
 		if (docs.size() > 1) {
 			logger.log(Level.WARNING, "Multiple documents with same name: '" + name + "'");
 		}
@@ -129,12 +152,11 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	/**
 	 * Searches for Documents with the given name and returns maximum two of
 	 * them.
-	 * @param tx 
 	 * 
 	 * @param name
 	 * @return
 	 */
-	private List<Entity> findDocumentsByName(Transaction tx, String name) {
+	private List<Entity> findDocumentsByName(String name) {
 		int slashPos = name.indexOf("/");
 		if (slashPos != -1) {
 			throw new IllegalArgumentException(
@@ -142,9 +164,8 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		}
 		Query query = new Query("Document").setFilter(
 				new FilterPredicate("name", FilterOperator.EQUAL, name));
-		DatastoreService datastoreService = DatastoreServiceFactory.getDatastoreService();
-		PreparedQuery preparedQuery = tx != null ? datastoreService.prepare(tx, query) : datastoreService.prepare(query);
-		List<Entity> docsWithKey = preparedQuery.asList(FetchOptions.Builder.withLimit(2));
+		List<Entity> docsWithKey = DatastoreServiceFactory.getDatastoreService().prepare(query)
+				.asList(FetchOptions.Builder.withLimit(2));
 		return docsWithKey;
 	}
 
@@ -164,7 +185,11 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		documentEntity.setProperty("creator", userNickName);
 		documentEntity.setProperty("changeId", (Integer)1);
 		DatastoreService dss = DatastoreServiceFactory.getDatastoreService();
-		dss.put(tx, documentEntity);
+		if (tx != null) {
+			dss.put(tx, documentEntity);
+		} else {
+			dss.put(documentEntity);
+		}
 		return documentEntity;
 	}
 
@@ -173,7 +198,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	 */
 	@Override
 	public List<ChangeInfo> getAllChanges(String docName) {
-		Entity document = getDocumentEntityByName(null, docName);
+		Entity document = getDocumentEntityByName(docName);
 		if (document != null) {
 			Query query = new Query("Change").setAncestor(document.getKey()).addSort("createTime",
 					Query.SortDirection.ASCENDING);

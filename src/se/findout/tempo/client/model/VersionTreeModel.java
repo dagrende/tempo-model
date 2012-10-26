@@ -16,13 +16,21 @@ public class VersionTreeModel {
 	private final List<Version> heads = new ArrayList<Version>();
 	private final List<Version> allVersions = new ArrayList<Version>();
 	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionTreeModel.VersionChangeListener>();
-	private int maxId = 0;
+	private Version initialVersion = new Version(1, null, null);
+	private int maxId;
 	
 	public VersionTreeModel() {
-		Version initialVersion = new Version(1, null, null);
+		clear();
+	}
+
+	public void clear() {
+		maxId = 0;
+		heads.clear();
+		allVersions.clear();
 		updateMaxId(initialVersion);
-		getHeads().add(initialVersion);
+		heads.add(initialVersion);
 		allVersions.add(initialVersion);
+		fireVersionChangeEvent(new VersionChangeEvent(this, initialVersion, false));
 	}
 
 	private void updateMaxId(Version initialVersion) {

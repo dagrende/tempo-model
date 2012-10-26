@@ -104,4 +104,8 @@ public class ModelModel {
 		return boxes.get(id);
 	}
 
+	public void clear() {
+		boxes.clear();
+	}
+
 }

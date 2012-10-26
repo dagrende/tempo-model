@@ -32,4 +32,10 @@ public interface ModelRepositoryService extends RemoteService {
 	 * @return list of baseVerion/change in chronological order
 	 */
 	List<ChangeInfo> getAllChanges(String documentName);
+	
+	/**
+	 * Clears the database and informs clients about it.
+	 * This change is not a normal model change added to the versions - it removes all versions.
+	 */
+	void clearDatabase();
 }

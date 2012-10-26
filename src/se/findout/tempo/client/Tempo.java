@@ -11,6 +11,7 @@ import se.findout.tempo.client.login.LoginInfo;
 import se.findout.tempo.client.login.LoginService;
 import se.findout.tempo.client.login.LoginServiceAsync;
 import se.findout.tempo.client.model.ChangeInfo;
+import se.findout.tempo.client.model.ClearDatabase;
 import se.findout.tempo.client.model.Command;
 import se.findout.tempo.client.model.ModelModel;
 import se.findout.tempo.client.model.ParticipantInfo;
@@ -25,6 +26,8 @@ import com.google.gwt.appengine.channel.client.SocketError;
 import com.google.gwt.appengine.channel.client.SocketListener;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.user.client.Window;
@@ -32,6 +35,7 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.SerializationStreamFactory;
 import com.google.gwt.user.client.ui.Anchor;
+import com.google.gwt.user.client.ui.HorizontalPanel;
 import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SplitLayoutPanel;
@@ -55,8 +59,8 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	private VerticalPanel loginPanel = new VerticalPanel();
 	private Label loginLabel = new Label(
 			"Please sign in to your Google Account to access the Tempo Model application.");
-	private Anchor signInLink = new Anchor("Sign In");
-	private Anchor signOutLink = new Anchor("Sign Out");
+	private Anchor signInLink = new Anchor("Login");
+	private Anchor signOutLink = new Anchor("Logout");
 	private String modelPath;
 	private SerializationStreamFactory pushServiceStreamFactory;
 	private ParticipantsModel participantsModel;
@@ -125,7 +129,32 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		mainPanel.addSouth(versionsAndParticipants, 200);
 		mainPanel.add(modelEditor);
 		RootPanel.get().add(mainPanel);
-		RootPanel.get().add(signOutLink);
+		
+		HorizontalPanel horizontalPanel = new HorizontalPanel();
+		horizontalPanel.setSpacing(1);
+		horizontalPanel.add(signOutLink);
+		RootPanel.get().add(new Label("   "));
+		Anchor clearDatabaseLink = new Anchor("ClearAll");
+		clearDatabaseLink.addClickHandler(new ClickHandler() {
+			
+			@Override
+			public void onClick(ClickEvent event) {
+				modelRepoService.clearDatabase(new AsyncCallback<Void>() {
+
+					@Override
+					public void onFailure(Throwable caught) {
+						logger.log(Level.WARNING, "Could not clear database");
+					}
+
+					@Override
+					public void onSuccess(Void result) {
+						logger.log(Level.INFO, "Database cleaned");
+					}
+				});
+			}
+		});
+		horizontalPanel.add(clearDatabaseLink);
+		RootPanel.get().add(horizontalPanel);
 		
 		
 		// make the main panel always fit the window
@@ -191,6 +220,10 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 							logger.log(Level.FINE, "received participantInfo n="
 									+ participantInfo.getParticipants().size());
 							participantsModel.setParticipants(participantInfo.getParticipants());
+						} else if (receivedObject instanceof ClearDatabase) {
+							logger.log(Level.FINE, "ClearDatabase received");
+							versionTreeView.selectVersion(versionTreeModel.getInitialVersion());
+							versionTreeModel.clear();
 						}
 					} catch (SerializationException e) {
 						throw new RuntimeException("Unable to deserialize " + message, e);

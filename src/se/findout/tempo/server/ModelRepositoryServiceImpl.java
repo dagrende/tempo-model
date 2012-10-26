@@ -10,6 +10,7 @@ import java.util.logging.Logger;
 
 import se.findout.tempo.client.ModelRepositoryService;
 import se.findout.tempo.client.model.ChangeInfo;
+import se.findout.tempo.client.model.ClearDatabase;
 import se.findout.tempo.client.model.Command;
 import se.findout.tempo.client.model.Participant;
 
@@ -38,8 +39,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	private Gson gson = new Gson();
 	
 	public ModelRepositoryServiceImpl() {
-		KindDeleter.deleteAllOfKind("Change");
-		KindDeleter.deleteAllOfKind("Document");		
+		clearDatabase();
 	}
 
 	@Override
@@ -78,7 +78,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		dss.put(changeEntity);
 		logger.log(Level.FINE, "committed changeId=" + changeId);
 		
-		sendToParticipants(channelId, baseVersionId, command, changeId);
+		sendToParticipants(channelId, new ChangeInfo(baseVersionId, command, changeId));
 		return changeId;
 	}
 
@@ -127,10 +127,16 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		}
 	}
 
-	private void sendToParticipants(String fromChannelId, int versionId, Command change, int changeId) {
+	/**
+	 * Sends an object to all participants except the one with fromChannelId. To send to all, use null for fromChannelId.
+	 * The object to send must be present in PushService to be supported by the gwt-rpc encoder/decoder.
+	 * @param fromChannelId a channelId or null
+	 * @param object the object to send
+	 */
+	private void sendToParticipants(String fromChannelId, Object object) {
 		for (String channelId : ParticipantRegistry.getInstance().getChannelIds()) {
 			if (!channelId.equals(fromChannelId)) {
-				PushServer.sendMessageByKey(channelId, new ChangeInfo(versionId, change, changeId));
+				PushServer.sendMessageByKey(channelId, object);
 			}
 		}
 	}
@@ -233,6 +239,14 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		} else {
 			return Collections.emptyList();
 		}
+	}
+
+	@Override
+	public void clearDatabase() {
+		KindDeleter.deleteAllOfKind("Change");
+		KindDeleter.deleteAllOfKind("Document");
+		
+		sendToParticipants(null, new ClearDatabase());
 	}
 
 }

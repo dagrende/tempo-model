@@ -1,6 +1,7 @@
 package se.findout.tempo.client;
 
 import se.findout.tempo.client.model.ChangeInfo;
+import se.findout.tempo.client.model.ClearDatabase;
 import se.findout.tempo.client.model.ParticipantInfo;
 
 import com.google.gwt.user.client.rpc.RemoteService;
@@ -20,9 +21,12 @@ import com.google.gwt.user.client.rpc.RemoteServiceRelativePath;
 @RemoteServiceRelativePath("push_service")
 public interface PushService extends RemoteService {
 	/**
-	 * A dummy method ensuring that ChangeInfo and all its subclasses are client
+	 * Dummy methods ensuring that ChangeInfo etc and its subclasses are client
 	 * serializable.
 	 */
-	ChangeInfo receiveMessage();
-	ParticipantInfo receiveMessage2();
+	ChangeInfo dummy1();
+
+	ParticipantInfo dummy2();
+
+	ClearDatabase dummy3();
 }

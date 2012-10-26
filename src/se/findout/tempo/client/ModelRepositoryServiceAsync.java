@@ -14,4 +14,6 @@ public interface ModelRepositoryServiceAsync {
 
 	void getAllChanges(String docPath, AsyncCallback<List<ChangeInfo>> callback);
 
+	void clearDatabase(AsyncCallback<Void> callback);
+
 }

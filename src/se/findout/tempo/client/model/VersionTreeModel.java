@@ -18,6 +18,7 @@ public class VersionTreeModel {
 	private List<VersionChangeListener> versionChangeListeners = new ArrayList<VersionTreeModel.VersionChangeListener>();
 	private Version initialVersion = new Version(1, null, null);
 	private int maxId;
+	private Version latestVersion = initialVersion;
 	
 	public VersionTreeModel() {
 		clear();
@@ -57,6 +58,7 @@ public class VersionTreeModel {
 			heads.set(i, newVersion);	// let the new version replace a head
 		}
 		allVersions.add(newVersion);
+		latestVersion = newVersion;
 		
 		fireVersionChangeEvent(new VersionChangeEvent(this, newVersion, i == -1));
 		return newVersion;
@@ -190,5 +192,13 @@ public class VersionTreeModel {
 			}
 		}
 		return null;
+	}
+
+	public Version getLatestVersion() {
+		return latestVersion;
+	}
+
+	public boolean isOnHead(Version selectedVersion) {
+		return getHeads().contains(selectedVersion);
 	}
 }

@@ -17,6 +17,7 @@ public class ParticpantsView extends FlowPanel implements PropertyChangeListener
 	private CellList<String> cellList;
 	private ParticipantsModel model;
 	private ListDataProvider<String> listDataProvider;
+	private String ownChannelId = null;
 
 	public ParticpantsView(ParticipantsModel model) {
 		this.model = model;
@@ -28,7 +29,11 @@ public class ParticpantsView extends FlowPanel implements PropertyChangeListener
 	private void setRows() {
 		List<String> values = new ArrayList<String>();
 		for (Participant participant : model.getParticipants()) {
-			values.add(participant.getNickname());
+			if (participant.getChannelId().equals(ownChannelId)) {
+				values.add(participant.getChannelId() + " (me)");
+			} else {
+				values.add(participant.getChannelId());
+			}
 		}
 		listDataProvider.setList(values);
 		listDataProvider.refresh();
@@ -44,5 +49,9 @@ public class ParticpantsView extends FlowPanel implements PropertyChangeListener
 	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		setRows();
+	}
+
+	public void setOwnChannelId(String ownChannelId) {
+		this.ownChannelId = ownChannelId;
 	}
 }

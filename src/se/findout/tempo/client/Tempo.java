@@ -1,5 +1,6 @@
 package se.findout.tempo.client;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -30,6 +31,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.logical.shared.ResizeHandler;
+import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -53,8 +55,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	private VersionTreeModel versionTreeModel;
 	private VersionTreeView versionTreeView;
 	private ModelModel modelModel;
-	private ModelRepositoryServiceAsync modelRepoService = null;
-
+	private ModelRepositoryServiceAsync modelRepoService = GWT.create(ModelRepositoryService.class);
 	private LoginInfo loginInfo = null;
 	private VerticalPanel loginPanel = new VerticalPanel();
 	private Label loginLabel = new Label(
@@ -64,6 +65,8 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 	private String modelPath;
 	private SerializationStreamFactory pushServiceStreamFactory;
 	private ParticipantsModel participantsModel;
+	private List<ChangeInfo> changeQueue = new ArrayList<ChangeInfo>();
+	private Timer timer = null;
 
 	/**
 	 * This is the entry point method.
@@ -111,7 +114,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		modelModel = new ModelModel();
 		ModelEditorView modelEditor = new ModelEditorView(modelModel);
 		modelEditor.addModelChangelListener(this);
-		
+
 		versionTreeModel = new VersionTreeModel();
 		versionTreeView = new VersionTreeView(versionTreeModel);
 		versionTreeView.selectVersion(versionTreeModel.getInitialVersion());
@@ -120,7 +123,8 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		participantsModel = new ParticipantsModel();
 		participantsModel.setParticipants(loginInfo.getParticipants());
 		ParticpantsView particpantsView = new ParticpantsView(participantsModel);
-		
+		particpantsView.setOwnChannelId(loginInfo.getChannelId());
+
 		// create all layout panels and add the views
 		final SplitLayoutPanel mainPanel = new SplitLayoutPanel(8);
 		final SplitLayoutPanel versionsAndParticipants = new SplitLayoutPanel(8);
@@ -129,14 +133,14 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		mainPanel.addSouth(versionsAndParticipants, 200);
 		mainPanel.add(modelEditor);
 		RootPanel.get().add(mainPanel);
-		
+
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
 		horizontalPanel.setSpacing(1);
 		horizontalPanel.add(signOutLink);
 		RootPanel.get().add(new Label("   "));
 		Anchor clearDatabaseLink = new Anchor("ClearAll");
 		clearDatabaseLink.addClickHandler(new ClickHandler() {
-			
+
 			@Override
 			public void onClick(ClickEvent event) {
 				modelRepoService.clearDatabase(new AsyncCallback<Void>() {
@@ -155,8 +159,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		});
 		horizontalPanel.add(clearDatabaseLink);
 		RootPanel.get().add(horizontalPanel);
-		
-		
+
 		// make the main panel always fit the window
 		mainPanel.setWidth("99%");
 		mainPanel.setHeight((Window.getClientHeight() - 21) + "px");
@@ -171,7 +174,26 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 		mainPanel.getElement().getStyle().setProperty("border", "3px solid #e7e7e7");
 		RootPanel.get().getElement().getStyle().setProperty("margin", "0px");
 
-		retrieveAllChanges(modelPath);
+		AsyncCallback<List<ChangeInfo>> callback = new AsyncCallback<List<ChangeInfo>>() {
+		
+			@Override
+			public void onSuccess(List<ChangeInfo> result) {
+				logger.log(Level.FINE, "initial read of " + result.size() + " changes");
+				for (ChangeInfo changeInfo : result) {
+					versionTreeModel.addVersion(
+							versionTreeModel.getVersionById(changeInfo.getBaseVersion()),
+							changeInfo.getChange());
+				}
+				// select head version of trunk
+				versionTreeView.selectVersion(versionTreeModel.getHeads().get(0));
+			}
+		
+			@Override
+			public void onFailure(Throwable caught) {
+				logger.log(Level.FINE, "failure", caught);
+			}
+		};
+		modelRepoService.getChangesAfterVersion(modelPath, 1, callback);
 	}
 
 	/**
@@ -196,23 +218,27 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 				@Override
 				public void onMessage(String message) {
 					logger.log(Level.FINE, "Received: " + message);
-					ChangeInfo changeInfo = null;
 					try {
-						Object receivedObject = pushServiceStreamFactory.createStreamReader(
-								message).readObject();
+						Object receivedObject = pushServiceStreamFactory
+								.createStreamReader(message).readObject();
+						logger.log(Level.FINE, "receivedObject=" + receivedObject);
 						if (receivedObject instanceof ChangeInfo) {
-							// received a model change from another user editing this model
-							changeInfo = (ChangeInfo) receivedObject;
-							Version selectedVersion = versionTreeView.getSelectedVersion();
-							Version baseVersion = versionTreeModel.getVersionById(changeInfo
-									.getBaseVersion());
-							boolean isOnHead = versionTreeModel.getHeads()
-									.contains(selectedVersion);
-							Version newVersion = versionTreeModel.addVersion(baseVersion,
-									changeInfo.getChange());
-							if (isOnHead
-									&& newVersion.getBase().getId() == selectedVersion.getId()) {
-								versionTreeView.selectVersion(newVersion);
+							// received a model change from another user editing
+							// this model
+							final ChangeInfo changeInfo = (ChangeInfo) receivedObject;
+							int changeId = changeInfo.getChangeId();
+							if (timer != null) {
+								logger.log(Level.FINE, "cancelled timer");
+								timer.cancel();
+							}
+							
+							changeQueue.add(changeInfo);
+							if (changeId <= versionTreeModel.getLatestVersion().getId() + 1) {
+								logger.log(Level.FINE, "changes are just after latest in model - apply them " + changeQueue.size());
+								applyAndRemoveChanges(changeQueue);
+							} else if (changeId > versionTreeModel.getLatestVersion().getId() + 1) {
+								logger.log(Level.FINE, "missing changes in model - readApplyDBAndTryQueue");
+								readApplyDBAndTryQueue();
 							}
 						} else if (receivedObject instanceof ParticipantInfo) {
 							// received a new changed participants list
@@ -226,7 +252,77 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 							versionTreeModel.clear();
 						}
 					} catch (SerializationException e) {
+						logger.log(Level.FINE, "Unable to deserialize " + message, e);
 						throw new RuntimeException("Unable to deserialize " + message, e);
+					}
+				}
+
+				protected void readApplyDBAndTryQueue() {
+					// there a gap in id sequence - get the missing changes before applying this change
+					AsyncCallback<List<ChangeInfo>> callback = new AsyncCallback<List<ChangeInfo>>() {
+
+
+						@Override
+						public void onSuccess(List<ChangeInfo> result) {
+							logger.log(Level.FINE, "applying " + result.size() + " changes from db");
+							for (ChangeInfo changeInfo : result) {
+								applyChange(changeInfo);
+							}
+							
+							if (!changeQueue.isEmpty()) {
+								if (changeQueue.get(0).getChangeId() == versionTreeModel.getLatestVersion().getId() + 1) {
+									logger.log(Level.FINE, "queued changes are just after latest in model - apply them " + changeQueue.size());
+									applyAndRemoveChanges(changeQueue);									
+								} else if (changeQueue.get(0).getChangeId() > versionTreeModel.getLatestVersion().getId() + 1) {
+									logger.log(Level.FINE, "missing changes in model - set timer");
+									timer = new Timer() {
+										public void run() {
+											logger.log(Level.FINE, "timer fired - run readApplyDBAndTryQueue()");
+											readApplyDBAndTryQueue();
+										}
+									};
+									timer.schedule(2000);
+								}
+							}
+							
+						}
+					
+						@Override
+						public void onFailure(Throwable caught) {
+							logger.log(Level.FINE, "failure", caught);
+						}
+					};
+					modelRepoService.getChangesAfterVersion(modelPath, versionTreeModel
+															.getLatestVersion().getId(), callback);
+				}
+
+				/**
+				 * Apply all changes in changeQueue with changeId > latestVersionId
+				 * @param changeQueue ordered list of changes to be applied
+				 * @param latestVersionId latest change already applied before this call
+				 */
+				private void applyAndRemoveChanges(List<ChangeInfo> changeQueue) {
+					int latestVersionId = versionTreeModel.getLatestVersion().getId();
+					while (!changeQueue.isEmpty()) {
+						ChangeInfo changeInfo = changeQueue.remove(0);
+						if (changeInfo.getChangeId() > latestVersionId) {
+							applyChange(changeInfo);	
+						}
+					}
+				}
+
+				/**
+				 * Apply a change and set selection to the new change if a head version  is selected and the change is based on the that head version.
+				 * @param changeInfo
+				 */
+				private void applyChange(final ChangeInfo changeInfo) {
+					Version selectedVersion = versionTreeView.getSelectedVersion();
+					Version baseVersion = versionTreeModel.getVersionById(changeInfo.getBaseVersion());
+					boolean onHead = versionTreeModel.isOnHead(selectedVersion);
+					Version newVersion = versionTreeModel.addVersion(baseVersion, changeInfo.getChange());
+					if (onHead
+							&& newVersion.getBase().getId() == selectedVersion.getId()) {
+						versionTreeView.selectVersion(newVersion);
 					}
 				}
 
@@ -241,6 +337,7 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 				}
 			});
 		}
+
 	}
 
 	/**
@@ -278,40 +375,6 @@ public class Tempo implements EntryPoint, EditorCommandListener, SelectionChange
 						change.execute(modelModel);
 					}
 				});
-	}
-
-	/**
-	 * Call the server to get all changes from the datastore, put them in the local version tree model and apply them to the local model model.
-	 * 
-	 * @param modelPath
-	 */
-	private void retrieveAllChanges(String modelPath) {
-		if (modelRepoService == null) {
-			modelRepoService = GWT.create(ModelRepositoryService.class);
-		}
-
-		AsyncCallback<List<ChangeInfo>> callback = new AsyncCallback<List<ChangeInfo>>() {
-
-			@Override
-			public void onSuccess(List<ChangeInfo> result) {
-				logger.log(Level.FINE, "");
-				for (ChangeInfo changeInfo : result) {
-					versionTreeModel.addVersion(
-							versionTreeModel.getVersionById(changeInfo.getBaseVersion()),
-							changeInfo.getChange());
-				}
-				
-				// select head version of trunk
-				versionTreeView.selectVersion(versionTreeModel.getHeads().get(0));
-			}
-
-			@Override
-			public void onFailure(Throwable caught) {
-				logger.log(Level.FINE, "");
-			}
-		};
-
-		modelRepoService.getAllChanges(modelPath, callback);
 	}
 
 	/**

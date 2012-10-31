@@ -12,8 +12,9 @@ public interface ModelRepositoryServiceAsync {
 	void addCommand(String channelId, String documentName, int baseVersion, Command command,
 			AsyncCallback<Integer> callback);
 
-	void getAllChanges(String docPath, AsyncCallback<List<ChangeInfo>> callback);
-
+	void getChangesAfterVersion(String documentName, int latestExistingVersion,
+			AsyncCallback<List<ChangeInfo>> callback);
+	
 	void clearDatabase(AsyncCallback<Void> callback);
 
 }

@@ -27,11 +27,12 @@ public interface ModelRepositoryService extends RemoteService {
 	int addCommand(String fromChannelId, String documentName, int baseVersion, Command command);
 	
 	/**
-	 * Returns all changes and their baseVersion, stored for the named document.
+	 * Returns info about all changes with versionId greater than the specified latestExistingVersion, stored for the named document.
 	 * @param documentName
-	 * @return list of baseVerion/change in chronological order
+	 * @param latestExistingVersion id of version to get changes after
+	 * @return list of change info in chronological order
 	 */
-	List<ChangeInfo> getAllChanges(String documentName);
+	List<ChangeInfo> getChangesAfterVersion(String documentName, int latestExistingVersion);
 	
 	/**
 	 * Clears the database and informs clients about it.

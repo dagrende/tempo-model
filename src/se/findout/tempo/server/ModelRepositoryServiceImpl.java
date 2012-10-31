@@ -68,17 +68,22 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 			throw new Error("Internal error: newly read or created entity not found", e);
 		}
 		
+		// store change and send to other participants
+		Date createTime = new Date();
+		String creator = user.getNickname();
 		Entity changeEntity = new Entity("Change", documentKey);
 		changeEntity.setProperty("changeId", (Integer)changeId);
 		changeEntity.setProperty("baseVersion", (Integer)baseVersionId);
 		changeEntity.setProperty("changeType", command.getClass().getName());
 		changeEntity.setProperty("changeData", json);
-		changeEntity.setProperty("createTime", new Date());
-		changeEntity.setProperty("creator", user.getNickname());
+		changeEntity.setProperty("createTime", createTime);
+		changeEntity.setProperty("creator", creator);
 		dss.put(changeEntity);
 		logger.log(Level.FINE, "committed changeId=" + changeId);
 		
-		sendToParticipants(channelId, new ChangeInfo(baseVersionId, command, changeId));
+		if (changeId >= 3) {
+			sendToParticipants(channelId, new ChangeInfo(baseVersionId, command, changeId, creator));
+		}
 		return changeId;
 	}
 
@@ -136,6 +141,7 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 	private void sendToParticipants(String fromChannelId, Object object) {
 		for (String channelId : ParticipantRegistry.getInstance().getChannelIds()) {
 			if (!channelId.equals(fromChannelId)) {
+				logger.log(Level.FINE, "send to channelId=" + channelId + "object=" + object);
 				PushServer.sendMessageByKey(channelId, object);
 			}
 		}
@@ -203,11 +209,8 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 		return documentEntity;
 	}
 
-	/**
-	 * Returns all Change objects with the named document as parent.
-	 */
 	@Override
-	public List<ChangeInfo> getAllChanges(String docName) {
+	public List<ChangeInfo> getChangesAfterVersion(String docName, int latestExistingVersion) {
 		List<Participant> participants = ParticipantRegistry.getInstance().getParticipants();
 		logger.log(Level.FINE, "" + participants.size() + " participants=" + participants);
 
@@ -218,25 +221,31 @@ public class ModelRepositoryServiceImpl extends RemoteServiceServlet implements
 			Iterable<Entity> channelEntities = DatastoreServiceFactory.getDatastoreService()
 					.prepare(query).asIterable();
 			List<ChangeInfo> changeInfos = new ArrayList<ChangeInfo>();
+			logger.log(Level.FINE, "place 2");
 			for (Entity entity : channelEntities) {
 				int changeId = getPropertyAsInteger(entity, "changeId");
-				int baseVersionId = (int)(long)(Long) entity.getProperty("baseVersion");
-				String changeType = (String) entity.getProperty("changeType");
-				String changeData = (String) entity.getProperty("changeData");
-				try {
-					changeInfos.add(new ChangeInfo(baseVersionId, (Command) gson.fromJson(changeData,
-							Class.forName(changeType)), changeId));
-				} catch (JsonSyntaxException e) {
-					e.printStackTrace();
-					throw new IllegalArgumentException("Invalid json syntax in db kind=" + entity.getKind() + " key=" + entity.getKey(), e);
-				} catch (ClassNotFoundException e) {
-					e.printStackTrace();
-					throw new IllegalArgumentException("Invalid json syntax in db kind=" + entity.getKind() + " key=" + entity.getKey() + " changeType=" + changeType, e);
+				if (changeId > latestExistingVersion) {
+					int baseVersionId = (int)(long)(Long) entity.getProperty("baseVersion");
+					String changeType = (String) entity.getProperty("changeType");
+					String changeData = (String) entity.getProperty("changeData");
+//					Date createTime = (Date) entity.getProperty("createTime");
+					String creator = (String) entity.getProperty("creator");
+					try {
+						changeInfos.add(new ChangeInfo(baseVersionId, (Command) gson.fromJson(changeData,
+								Class.forName(changeType)), changeId, creator));
+					} catch (JsonSyntaxException e) {
+						e.printStackTrace();
+						throw new IllegalArgumentException("Invalid json syntax in db kind=" + entity.getKind() + " key=" + entity.getKey(), e);
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
+						throw new IllegalArgumentException("Invalid json syntax in db kind=" + entity.getKind() + " key=" + entity.getKey() + " changeType=" + changeType, e);
+					}
 				}
 			}
-
+			logger.log(Level.FINE, "changeInfos=" + changeInfos);
 			return changeInfos;
 		} else {
+			logger.log(Level.FINE, "changeInfos=[]");
 			return Collections.emptyList();
 		}
 	}

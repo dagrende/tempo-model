@@ -3,9 +3,17 @@ package se.findout.tempo.client;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.vaadin.gwtgraphics.client.DrawingArea;
+import org.eclipse.draw2d.geometry.Dimension;
+import org.eclipse.draw2d.geometry.Point;
+import org.eclipse.gef.EditDomain;
+import org.eclipse.gef.examples.shapes.model.EllipticalShape;
+import org.eclipse.gef.examples.shapes.model.RectangularShape;
+import org.eclipse.gef.examples.shapes.model.ShapesDiagram;
+import org.eclipse.gef.examples.shapes.parts.ShapesEditPartFactory;
+import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
 import org.vaadin.gwtgraphics.client.VectorObject;
-import org.vaadin.gwtgraphics.client.shape.Rectangle;
 
 import se.findout.tempo.client.ToolPalette.ToolSelectionEvent;
 import se.findout.tempo.client.ToolPalette.ToolSelectionListener;
@@ -13,12 +21,10 @@ import se.findout.tempo.client.model.Command;
 import se.findout.tempo.client.model.CreateRectangleCommand;
 import se.findout.tempo.client.model.DeleteCommand;
 import se.findout.tempo.client.model.ModelModel;
-import se.findout.tempo.client.model.ModelModel.Box;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.HorizontalPanel;
+import com.google.gwt.user.client.ui.Widget;
 
 /**
  * A model editor for editing a model represented by a ModelModel. Has a palette
@@ -37,63 +43,37 @@ import com.google.gwt.user.client.ui.HorizontalPanel;
  */
 public class ModelEditorView extends FlowPanel implements ToolSelectionListener {
 	private List<EditorCommandListener> editorCommandListeners = new ArrayList<ModelEditorView.EditorCommandListener>();
-	private DrawingArea drawingArea;
 	private List<ModelItem> modelItems = new ArrayList<ModelItem>();
 	private int nextId = 1;
-	private ClickHandler modelItemClickHandler = new ModelItemClickHandler();
-	private ToolPalette toolPalette;
+	EditDomain editDomain = new EditDomain();
 
 	public ModelEditorView(ModelModel modelModel) {
 		HorizontalPanel horizontalPanel = new HorizontalPanel();
 
-		toolPalette = new ToolPalette();
-		toolPalette
-				.addTool("rectangle", "Rectangle",
-						"Select this tool and click in drawing area to create a rectangle");
-		toolPalette.addTool("delete", "Delete",
-				"Select this tool and click on object to delete it");
-		toolPalette.addSelectionListener(this);
-		horizontalPanel.add(toolPalette);
-
-		drawingArea = new DrawingArea(1600, 900);
-		drawingArea.addClickHandler(new ClickHandler() {
-			@Override
-			public void onClick(ClickEvent event) {
-				if ("rectangle".equals(toolPalette.getSelectedTool())) {
-					createRectangle(createId(), event.getX(), event.getY(), 50,
-							50);
-				}
-			}
-		});
-		horizontalPanel.add(drawingArea);
+		Composite editorControl = new Composite(null, SWT.NONE);
+		ScrollingGraphicalViewer sgv = new ScrollingGraphicalViewer();
+		sgv.createControl(editorControl);
+		sgv.setEditPartFactory(new ShapesEditPartFactory());
+		sgv.setEditDomain(editDomain);
+		sgv.setContents(createContent());
+		editorControl.setSize(700, 300);
+		Widget gwtWidget = editorControl.getGwtWidget();
+		horizontalPanel.add(gwtWidget);
 
 		add(horizontalPanel);
-		toolPalette.selectTool("rectangle");
+	}
 
-		modelModel.addChangeListener(new ModelModel.ModelChangeListener() {
-			@Override
-			public void addBox(Box box) {
-				Rectangle rectangle = new Rectangle(box.getX(), box.getY(), box
-						.getWidth(), box.getHeight());
-				rectangle.addClickHandler(modelItemClickHandler);
-				ModelItem modelItem = new ModelItem(box.getId(), rectangle);
-				modelItems.add(modelItem);
-				drawingArea.add(rectangle);
-			}
-
-			@Override
-			public void deleteBox(String id) {
-				ModelItem deletedItem = getItemById(id);
-				if (deletedItem != null) {
-					System.out
-							.println("ModelEditorView.ModelEditorView(...).new ModelChangeListener() {...}.deleteBox("
-									+ id + ")");
-					drawingArea.remove(deletedItem.getVo());
-					modelItems.remove(deletedItem);
-				}
-			}
-
-		});
+	private Object createContent() {
+		ShapesDiagram diagram = new ShapesDiagram();
+		RectangularShape rs = new RectangularShape();
+		rs.setSize(new Dimension(75, 75));
+		rs.setLocation(new Point(10, 10));
+		EllipticalShape es = new EllipticalShape();
+		es.setSize(new Dimension(140, 70));
+		es.setLocation(new Point(100, 100));
+		diagram.addChild(rs);
+		diagram.addChild(es);
+		return diagram;
 	}
 
 	private String createId() {
@@ -133,18 +113,6 @@ public class ModelEditorView extends FlowPanel implements ToolSelectionListener 
 
 	@Override
 	public void onSelect(ToolSelectionEvent toolSelectionEvent) {
-	}
-
-	private final class ModelItemClickHandler implements ClickHandler {
-		@Override
-		public void onClick(ClickEvent event) {
-			ModelItem item = getItemByVo(event.getSource());
-			if ("delete".equals(toolPalette.getSelectedTool())) {
-				if (item != null) {
-					deleteModelObject(item.getId());
-				}
-			}
-		}
 	}
 
 	public class ModelItem {
